@@ -811,17 +811,40 @@ function renderMonth(){
   const el=document.getElementById('mCal');
   const y=curDate.getFullYear(),m=curDate.getMonth(),ts=toStr(),fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
   const DAYS=['일','월','화','수','목','금','토'];
+  function getDayRes(ds){return reservations.filter(r=>r.cin<=ds&&r.cout>ds&&r.status!=='cancelled');}
   let html=`<thead><tr>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
   let day=1-fd;
   for(let row=0;row<6;row++){
-    if(day>dim)break;
+    if(day>dim) break;
     html+='<tr>';
     for(let col=0;col<7;col++,day++){
-      if(day<1||day>dim){html+=`<td><div class="dcell"><div class="dnum om">${day<1?new Date(y,m,day).getDate():day-dim}</div></div></td>`;}
-      else{
+      if(day<1||day>dim){
+        html+=`<td><div class="dcell" style="min-height:72px"><div class="dnum om">${day<1?new Date(y,m,day).getDate():day-dim}</div></div></td>`;
+      } else {
         const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,iT=ds===ts;
-        const evts=reservations.filter(r=>r.cin<=ds&&r.cout>ds&&r.status!=='cancelled').map(r=>{const col=getCol(r.color);return `<div class="devt" style="background:${col.bg};color:${col.text};border-left:2px solid ${col.border}">${r.sticker||''}${r.name}</div>`;}).join('');
-        html+=`<td><div class="dcell" onclick="openAddDate('','${ds}')"><div class="dnum${iT?' tnow':''}">${day}</div>${evts}</div></td>`;
+        const dayRes=getDayRes(ds);
+        const isFirst=col===0,isLast=col===6;
+        const bars=dayRes.map(res=>{
+          const c=getCol(res.color);
+          const nextDs=new Date(new Date(ds).getTime()+86400000).toISOString().split('T')[0];
+          const isStart=res.cin===ds,isEnd=res.cout===nextDs,isSingle=isStart&&isEnd;
+          let left='0',right='0',bStyle='';
+          const bEdge=`border-top:1.5px solid ${c.border};border-bottom:1.5px solid ${c.border};`;
+          if(isSingle){
+            left='2px';right='2px';bStyle=`border:1.5px solid ${c.border};border-radius:3px;`;
+          } else if(isStart){
+            left='2px';right=isLast?'2px':'-1px';
+            bStyle=`${bEdge}border-left:1.5px solid ${c.border};border-radius:3px 0 0 3px;`;
+          } else if(isEnd){
+            left=isFirst?'2px':'-1px';right='2px';
+            bStyle=`${bEdge}border-right:1.5px solid ${c.border};border-radius:0 3px 3px 0;`;
+          } else {
+            left=isFirst?'2px':'-1px';right=isLast?'2px':'-1px';bStyle=bEdge;
+          }
+          const label=(isStart||isSingle)?`${res.sticker||''}${res.name}`:'';
+          return `<div style="position:relative;height:16px;margin-bottom:2px"><div style="position:absolute;top:1px;bottom:1px;left:${left};right:${right};background:${c.bg};color:${c.text};${bStyle}display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;cursor:pointer;z-index:1" onclick="selRes(${res.id});event.stopPropagation()" title="${res.name}${res.channel?' · '+res.channel:''}">${label}</div></div>`;
+        }).join('');
+        html+=`<td><div class="dcell" style="min-height:72px" onclick="openAddDate('','${ds}')"><div class="dnum${iT?' tnow':''}">${day}</div>${bars}</div></td>`;
       }
     }
     html+='</tr>';
