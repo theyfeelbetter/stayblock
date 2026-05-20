@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StayBlock — 일정 초대</title>
+<meta name="description" content="StayBlock 일정 초대장">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d0d0d;--ink2:#3a3a3a;--ink3:#6b6b6b;
+  --paper:#f7f4ef;--paper2:#edeae3;--paper3:#e2ddd5;
+  --accent:#c94f1e;--accent2:#e8753a;
+  --green:#1a6b3c;--green2:#e8f5ee;
+  --red:#8b1a1a;--red2:#fdeaea;
+  --border:#d5cfc4;--r:8px;--rl:16px;
+  --sh:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+  --sh2:0 8px 32px rgba(0,0,0,.14),0 24px 64px rgba(0,0,0,.1);
+}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0}
+button{font-family:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+/* TOP BAR */
+.topbar{width:100%;background:var(--ink);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.topbar-logo{font-family:'DM Serif Display',serif;font-size:18px;color:#f7f4ef;letter-spacing:-.5px}
+.topbar-logo span{color:var(--accent2)}
+
+/* CARD WRAPPER */
+.card-wrap{width:100%;max-width:520px;padding:40px 20px 80px;margin:0 auto}
+
+/* STATUS STATES */
+.state-icon{font-size:52px;text-align:center;margin-bottom:16px}
+.state-title{font-family:'DM Serif Display',serif;font-size:28px;text-align:center;letter-spacing:-.5px;margin-bottom:8px}
+.state-sub{font-size:14px;color:var(--ink3);text-align:center;line-height:1.7;margin-bottom:28px}
+
+/* INVITE CARD */
+.invite-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh2);margin-bottom:20px}
+.invite-card-hd{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px}
+.invite-type-icon{width:44px;height:44px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.invite-title{font-weight:700;font-size:17px;margin-bottom:3px;line-height:1.3}
+.invite-host{font-size:12px;color:var(--ink3)}
+.invite-host strong{color:var(--ink2)}
+
+.invite-body{padding:0}
+.inv-row{display:flex;align-items:flex-start;gap:12px;padding:13px 24px;border-bottom:1px solid var(--paper2)}
+.inv-row:last-child{border-bottom:none}
+.inv-icon{font-size:15px;flex-shrink:0;margin-top:1px;width:20px;text-align:center}
+.inv-label{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.inv-val{font-size:14px;font-weight:500;color:var(--ink)}
+.inv-val.mono{font-family:'DM Mono',monospace}
+
+.invite-note{background:var(--paper2);padding:14px 24px;font-size:13px;color:var(--ink2);line-height:1.65;border-top:1px solid var(--border)}
+.invite-note-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+
+/* ACTION BUTTONS */
+.action-row{display:flex;gap:10px;margin-bottom:14px}
+.btn-accept{flex:1;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-accept:hover{background:#145530;transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,107,60,.3)}
+.btn-decline{padding:14px 18px;background:none;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-weight:500;color:var(--ink3);transition:all .18s}
+.btn-decline:hover{border-color:var(--red);color:var(--red);background:var(--red2)}
+
+/* CAL ADD BUTTONS */
+.cal-section{margin-top:4px}
+.cal-label{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;text-align:center}
+.cal-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.cal-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;font-weight:500;color:var(--ink2);transition:all .15s}
+.cal-btn:hover{border-color:var(--ink);color:var(--ink);box-shadow:var(--sh)}
+.cal-btn-icon{font-size:16px}
+
+/* ACCEPTED STATE */
+.accepted-card{background:var(--green2);border:1.5px solid #b2dfdb;border-radius:var(--rl);padding:24px;text-align:center;margin-bottom:20px}
+.declined-card{background:var(--red2);border:1.5px solid #f48fb1;border-radius:var(--rl);padding:24px;text-align:center;margin-bottom:20px}
+
+/* ERROR STATE */
+.error-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);padding:32px;text-align:center}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* BADGE */
+.type-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.04em;margin-top:4px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;z-index:999;transition:transform .28s ease;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Stay<span>Block</span></div>
+  <div style="font-size:12px;color:rgba(247,244,239,.5)">일정 초대장</div>
+</div>
+
+<div class="card-wrap" id="mainWrap">
+  <!-- Dynamically rendered by JS -->
+  <div style="text-align:center;padding:60px 0;color:var(--ink3)">
+    <div style="font-size:32px;margin-bottom:12px">⏳</div>
+    <div style="font-size:14px">초대 정보를 불러오는 중...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════ INVITE TYPE CONFIG ═══════════ */
+const INVITE_TYPES = {
+  cleaning:  { label:'객실 청소',    icon:'🧹', color:'#e8f5ee', border:'#b2dfdb', text:'#1a6b3c' },
+  repair:    { label:'시설 수리',    icon:'🔧', color:'#e8eef5', border:'#90caf9', text:'#0d47a1' },
+  checkin:   { label:'체크인 안내',  icon:'🛎️', color:'#ffe0b2', border:'#ffcc80', text:'#bf360c' },
+  delivery:  { label:'납품·배달',   icon:'📦', color:'#f3e5f5', border:'#ce93d8', text:'#4a148c' },
+  meeting:   { label:'미팅',        icon:'👥', color:'#fdf3dc', border:'#ffcc80', text:'#8b6914' },
+  inspection:{ label:'시설 점검',   icon:'🔍', color:'#e8f5ee', border:'#80cbc4', text:'#004d40' },
+  custom:    { label:'일정',        icon:'📅', color:'#f7f4ef', border:'#d5cfc4', text:'#3a3a3a' },
+};
+
+const MONTHS_KO=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const DAYS_KO=['일','월','화','수','목','금','토'];
+
+/* ═══════════ PARSE TOKEN FROM URL ═══════════ */
+function parseInvite(){
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get('token');
+  if(!token) return null;
+  try{
+    const json = atob(decodeURIComponent(token));
+    return JSON.parse(json);
+  } catch(e){ return null; }
+}
+
+/* ═══════════ FORMAT HELPERS ═══════════ */
+function fmtDate(dateStr, timeStr=''){
+  const d = new Date(dateStr);
+  const dow = DAYS_KO[d.getDay()];
+  const base = `${d.getFullYear()}년 ${MONTHS_KO[d.getMonth()]} ${d.getDate()}일 (${dow})`;
+  return timeStr ? `${base} ${timeStr}` : base;
+}
+function fmtDuration(inv){
+  if(inv.startTime && inv.endTime){
+    return `${inv.startTime} — ${inv.endTime}`;
+  }
+  if(inv.date && inv.endDate && inv.date !== inv.endDate){
+    return `${fmtDate(inv.date)} ~ ${fmtDate(inv.endDate)}`;
+  }
+  return '종일';
+}
+
+/* ═══════════ ICS GENERATOR ═══════════ */
+function makeICS(inv){
+  const type = INVITE_TYPES[inv.type] || INVITE_TYPES.custom;
+  const uid  = `stayblock-${inv.id || Date.now()}@stayblock`;
+  const now  = new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+
+  function toICSDate(dateStr, timeStr=''){
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const dd= String(d.getDate()).padStart(2,'0');
+    if(!timeStr) return `${y}${m}${dd}`;
+    const [h,min] = timeStr.split(':');
+    return `${y}${m}${dd}T${h}${min}00`;
+  }
+
+  const dtStart = inv.startTime ? toICSDate(inv.date, inv.startTime) : toICSDate(inv.date);
+  const dtEnd   = inv.endTime   ? toICSDate(inv.date, inv.endTime)
+                : inv.endDate   ? toICSDate(inv.endDate)
+                : toICSDate(inv.date); // fallback same day
+
+  const isAllDay = !inv.startTime;
+  const dtProp  = isAllDay ? 'DATE' : 'DATE-TIME';
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//StayBlock//Invite//KO',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART;VALUE=${dtProp}:${dtStart}`,
+    `DTEND;VALUE=${dtProp}:${dtEnd}`,
+    `SUMMARY:${type.icon} [${type.label}] ${inv.title || ''}`,
+    `DESCRIPTION:${[
+      `공간: ${inv.room || ''}`,
+      `호스트: ${inv.hostName || ''}`,
+      `연락처: ${inv.hostContact || ''}`,
+      inv.note ? `\n메모: ${inv.note}` : ''
+    ].filter(Boolean).join('\\n')}`,
+    `LOCATION:${inv.location || inv.room || ''}`,
+    `ORGANIZER;CN=${inv.hostName || 'StayBlock Host'}:MAILTO:${inv.hostEmail || 'noreply@stayblock.io'}`,
+    'STATUS:CONFIRMED',
+    'SEQUENCE:0',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT60M',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:1시간 전 알림: ${inv.title}`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+}
+
+function downloadICS(inv){
+  const ics  = makeICS(inv);
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `stayblock_invite_${inv.date||'schedule'}.ics`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function googleCalUrl(inv){
+  const type = INVITE_TYPES[inv.type] || INVITE_TYPES.custom;
+  const base = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+  const title = encodeURIComponent(`${type.icon} [${type.label}] ${inv.title||''}`);
+  const loc   = encodeURIComponent(inv.location || inv.room || '');
+  const desc  = encodeURIComponent([
+    `공간: ${inv.room||''}`,
+    `호스트: ${inv.hostName||''}`,
+    inv.note||''
+  ].filter(Boolean).join('\n'));
+
+  // dates
+  const d = new Date(inv.date);
+  const pad=(n)=>String(n).padStart(2,'0');
+  let dates;
+  if(inv.startTime){
+    const [h1,m1]=inv.startTime.split(':'), [h2,m2]=(inv.endTime||inv.startTime).split(':');
+    const y=d.getFullYear(),mo=pad(d.getMonth()+1),dd=pad(d.getDate());
+    dates=`${y}${mo}${dd}T${h1}${m1}00/${y}${mo}${dd}T${h2}${m2}00`;
+  } else {
+    const y=d.getFullYear(),mo=pad(d.getMonth()+1),dd=pad(d.getDate());
+    dates=`${y}${mo}${dd}/${y}${mo}${dd}`;
+  }
+  return `${base}&text=${title}&dates=${dates}&location=${loc}&details=${desc}`;
+}
+
+/* ═══════════ RESPONSE TRACKING ═══════════ */
+function saveResponse(invId, response){
+  const key = `sb_inv_${invId}`;
+  const existing = JSON.parse(localStorage.getItem(key)||'null');
+  const data = { response, respondedAt: new Date().toISOString(), ...(existing||{}) };
+  localStorage.setItem(key, JSON.stringify(data));
+}
+function getResponse(invId){
+  const key = `sb_inv_${invId}`;
+  return JSON.parse(localStorage.getItem(key)||'null');
+}
+
+/* ═══════════ RENDER ═══════════ */
+function render(){
+  const inv = parseInvite();
+  const wrap = document.getElementById('mainWrap');
+
+  if(!inv){
+    wrap.innerHTML = `
+      <div style="padding:48px 0;text-align:center">
+        <div class="state-icon">❓</div>
+        <div class="state-title">초대장을 찾을 수 없어요</div>
+        <div class="state-sub">링크가 올바르지 않거나 만료되었을 수 있어요.<br>초대장을 보낸 호스트에게 다시 요청해주세요.</div>
+        <div class="error-card" style="margin-top:0">
+          <div style="font-size:13px;color:var(--ink3)">StayBlock으로 운영 중인 호스트에게 초대받으셨나요?</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:6px">올바른 초대 링크는 <span style="font-family:'DM Mono',monospace;background:var(--paper2);padding:2px 6px;border-radius:4px">?token=...</span> 형식이에요.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Check if already responded
+  const prev = getResponse(inv.id);
+  if(prev && prev.response === 'accepted'){
+    renderAccepted(inv, wrap, true);
+    return;
+  }
+  if(prev && prev.response === 'declined'){
+    renderDeclined(inv, wrap, true);
+    return;
+  }
+
+  renderInvite(inv, wrap);
+}
+
+function inviteCardHTML(inv){
+  const type = INVITE_TYPES[inv.type] || INVITE_TYPES.custom;
+  return `
+    <div class="invite-card">
+      <div class="invite-card-hd">
+        <div class="invite-type-icon" style="background:${type.color};color:${type.text}">${type.icon}</div>
+        <div style="flex:1">
+          <div class="invite-title">${inv.title || type.label}</div>
+          <div class="invite-host">from <strong>${inv.hostName || '호스트'}</strong></div>
+          <span class="type-badge" style="background:${type.color};color:${type.text}">${type.label}</span>
+        </div>
+      </div>
+      <div class="invite-body">
+        <div class="inv-row">
+          <div class="inv-icon">📅</div>
+          <div><div class="inv-label">날짜</div><div class="inv-val">${fmtDate(inv.date)}</div></div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-icon">🕐</div>
+          <div><div class="inv-label">시간</div><div class="inv-val mono">${fmtDuration(inv)}</div></div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-icon">📍</div>
+          <div><div class="inv-label">장소</div><div class="inv-val">${inv.room || inv.location || '—'}</div></div>
+        </div>
+        ${inv.location ? `<div class="inv-row"><div class="inv-icon">🗺️</div><div><div class="inv-label">주소</div><div class="inv-val">${inv.location}</div></div></div>` : ''}
+        ${inv.hostContact ? `<div class="inv-row"><div class="inv-icon">📞</div><div><div class="inv-label">연락처</div><div class="inv-val mono">${inv.hostContact}</div></div></div>` : ''}
+        ${inv.guestName ? `<div class="inv-row"><div class="inv-icon">👤</div><div><div class="inv-label">초대 대상</div><div class="inv-val">${inv.guestName}</div></div></div>` : ''}
+      </div>
+      ${inv.note ? `<div class="invite-note"><div class="invite-note-label">📝 메모</div>${inv.note}</div>` : ''}
+    </div>`;
+}
+
+function renderInvite(inv, wrap){
+  wrap.innerHTML = `
+    <div class="state-icon" style="margin-top:32px">📬</div>
+    <div class="state-title">일정 초대가 도착했어요</div>
+    <div class="state-sub">${inv.hostName || '호스트'}님이 아래 일정에 초대했습니다.</div>
+    ${inviteCardHTML(inv)}
+    <div class="action-row">
+      <button class="btn-accept" onclick="acceptInvite()">✅ 수락하기</button>
+      <button class="btn-decline" onclick="declineInvite()">거절</button>
+    </div>
+    <div class="divider"></div>
+    <div class="cal-section">
+      <div class="cal-label">캘린더에 바로 추가하기</div>
+      <div class="cal-btns">
+        <button class="cal-btn" onclick="addToGoogle()"><span class="cal-btn-icon">📅</span>Google 캘린더</button>
+        <button class="cal-btn" onclick="downloadICS(window._inv)"><span class="cal-btn-icon">🍎</span>Apple 캘린더</button>
+        <button class="cal-btn" onclick="downloadICS(window._inv)"><span class="cal-btn-icon">📆</span>.ics 다운로드</button>
+      </div>
+    </div>`;
+  window._inv = inv;
+}
+
+function renderAccepted(inv, wrap, fromCache){
+  const type = INVITE_TYPES[inv.type] || INVITE_TYPES.custom;
+  wrap.innerHTML = `
+    <div class="state-icon" style="margin-top:32px">✅</div>
+    <div class="state-title">수락했습니다!</div>
+    <div class="state-sub">${fromCache ? '이미 수락한 일정이에요.' : `${inv.hostName || '호스트'}님께 수락 알림이 전송됩니다.`}</div>
+    <div class="accepted-card">
+      <div style="font-size:28px;margin-bottom:8px">${type.icon}</div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:4px">${inv.title || type.label}</div>
+      <div style="font-size:13px;color:var(--green)">${fmtDate(inv.date)} ${inv.startTime||''}</div>
+      <div style="font-size:13px;color:var(--green);margin-top:2px">${inv.room||''}</div>
+    </div>
+    <div class="cal-section">
+      <div class="cal-label">캘린더에 추가하기</div>
+      <div class="cal-btns">
+        <button class="cal-btn" onclick="addToGoogle()"><span class="cal-btn-icon">📅</span>Google 캘린더</button>
+        <button class="cal-btn" onclick="downloadICS(window._inv)"><span class="cal-btn-icon">🍎</span>Apple 캘린더</button>
+        <button class="cal-btn" onclick="downloadICS(window._inv)"><span class="cal-btn-icon">📆</span>.ics 다운로드</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="text-align:center">
+      <button onclick="renderInvite(window._inv,document.getElementById('mainWrap'))" style="background:none;border:none;font-size:12px;color:var(--ink3);text-decoration:underline;cursor:pointer">초대장 다시 보기</button>
+    </div>`;
+  window._inv = inv;
+}
+
+function renderDeclined(inv, wrap, fromCache){
+  wrap.innerHTML = `
+    <div class="state-icon" style="margin-top:32px">🙅</div>
+    <div class="state-title">거절했습니다</div>
+    <div class="state-sub">${fromCache ? '이미 거절한 일정이에요.' : `${inv.hostName || '호스트'}님께 거절 알림이 전송됩니다.`}</div>
+    <div class="declined-card">
+      <div style="font-size:13px;color:var(--red)">일정을 거절했어요. 호스트에게 직접 연락해 다른 일정을 조율할 수 있어요.</div>
+      ${inv.hostContact ? `<div style="margin-top:10px;font-size:14px;font-weight:600">📞 ${inv.hostContact}</div>` : ''}
+    </div>
+    <div style="text-align:center">
+      <button onclick="renderInvite(window._inv,document.getElementById('mainWrap'))" style="background:none;border:none;font-size:12px;color:var(--ink3);text-decoration:underline;cursor:pointer">초대장 다시 보기</button>
+    </div>`;
+  window._inv = inv;
+}
+
+/* ═══════════ ACTIONS ═══════════ */
+function acceptInvite(){
+  const inv = window._inv;
+  saveResponse(inv.id, 'accepted');
+  // Send mailto to host
+  if(inv.hostEmail){
+    const sub = encodeURIComponent(`[수락] ${inv.title || '일정 초대'} — ${inv.date}`);
+    const body = encodeURIComponent(`안녕하세요, ${inv.hostName || ''}님.\n\n${inv.date} ${inv.startTime||''} ${inv.room||''} 일정을 수락합니다.\n\n감사합니다.`);
+    window.open(`mailto:${inv.hostEmail}?subject=${sub}&body=${body}`,'_blank');
+  }
+  renderAccepted(inv, document.getElementById('mainWrap'), false);
+  showToast('✅ 수락 완료! 캘린더에 추가해두세요.');
+}
+
+function declineInvite(){
+  const inv = window._inv;
+  if(!confirm('정말 거절하시겠어요?')) return;
+  saveResponse(inv.id, 'declined');
+  if(inv.hostEmail){
+    const sub = encodeURIComponent(`[거절] ${inv.title || '일정 초대'} — ${inv.date}`);
+    const body = encodeURIComponent(`안녕하세요, ${inv.hostName || ''}님.\n\n${inv.date} ${inv.startTime||''} 일정 참석이 어렵습니다.\n\n감사합니다.`);
+    window.open(`mailto:${inv.hostEmail}?subject=${sub}&body=${body}`,'_blank');
+  }
+  renderDeclined(inv, document.getElementById('mainWrap'), false);
+}
+
+function addToGoogle(){
+  if(window._inv) window.open(googleCalUrl(window._inv),'_blank');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ── INIT ── */
+render();
+</script>
+</body>
+</html>
