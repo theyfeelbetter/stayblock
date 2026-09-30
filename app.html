@@ -1122,10 +1122,13 @@ let editingId=null,selectedId=null;
 let pColor=BLOCK_COLORS[0].id,pSticker='',pChannel='';
 let pendingInd='stay',icalFeeds=[];
 
-function save(){localStorage.setItem('sb3r',JSON.stringify(reservations));localStorage.setItem('sb3i',industry.id);localStorage.setItem('sb3f',JSON.stringify(icalFeeds));localStorage.setItem('sb_via_props',JSON.stringify(viaProps));}
+function save(){localStorage.setItem('sb3r',JSON.stringify(reservations));localStorage.setItem('sb3i',industry.id);localStorage.setItem('sb3rooms',JSON.stringify(industry.rooms));localStorage.setItem('sb3f',JSON.stringify(icalFeeds));localStorage.setItem('sb_via_props',JSON.stringify(viaProps));}
 function load(){
   const iid=localStorage.getItem('sb3i')||'stay';
   industry=INDUSTRIES.find(x=>x.id===iid)||INDUSTRIES[0]; curUnit=industry.unit;
+  // 저장된 커스텀 rooms 복원 (saveRoomNames로 수정된 공간명 유지)
+  const savedRooms=localStorage.getItem('sb3rooms');
+  if(savedRooms){try{industry.rooms=JSON.parse(savedRooms);}catch(e){}}
   const r=localStorage.getItem('sb3r');
   if(r){reservations=JSON.parse(r);nextId=Math.max(0,...reservations.map(x=>x.id))+1;}else seed();
   const f=localStorage.getItem('sb3f'); if(f) icalFeeds=JSON.parse(f);
@@ -1339,10 +1342,10 @@ function goToday(){curDate=new Date();updTitle();renderAll();}
 function switchView(v,btn){
   curView=v;
   document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');
-  document.getElementById('view-tl').style.display=v==='tl'?'flex':'none';
-  document.getElementById('view-mo').style.display=v==='mo'?'flex':'none';
-  document.getElementById('view-yr').style.display=v==='yr'?'flex':'none';
-  const syncEl=document.getElementById('view-sync');if(syncEl)syncEl.style.display=v==='sync'?'flex':'none';
+  document.getElementById('view-tl').style.display=v==='tl'?'':'none';
+  document.getElementById('view-mo').style.display=v==='mo'?'':'none';
+  document.getElementById('view-yr').style.display=v==='yr'?'':'none';
+  const syncEl=document.getElementById('view-sync');if(syncEl)syncEl.style.display=v==='sync'?'':'none';
   if(v==='sync'){if(typeof renderSyncLogs==='function')renderSyncLogs();return;}
   gaEvent('view_switch','calendar',v);
   renderAll();
@@ -1494,7 +1497,7 @@ function openIndMo(){
   document.getElementById('moInd').classList.add('open');
 }
 function pickInd(id){pendingInd=id;document.querySelectorAll('.ind-card').forEach((c,i)=>c.classList.toggle('on',INDUSTRIES[i].id===id));}
-function saveIndustry(){industry=INDUSTRIES.find(i=>i.id===pendingInd)||INDUSTRIES[0];curUnit=industry.unit;document.getElementById('hd-icon').textContent=industry.icon;document.getElementById('hd-name').textContent=industry.name;document.querySelectorAll('.utab').forEach((b,i)=>b.classList.toggle('on',(i===0&&curUnit==='day')||(i===1&&curUnit==='hour')));save();closeMo('moInd');updTitle();renderAll();}
+function saveIndustry(){industry=INDUSTRIES.find(i=>i.id===pendingInd)||INDUSTRIES[0];curUnit=industry.unit;localStorage.removeItem('sb3rooms');document.getElementById('hd-icon').textContent=industry.icon;document.getElementById('hd-name').textContent=industry.name;document.querySelectorAll('.utab').forEach((b,i)=>b.classList.toggle('on',(i===0&&curUnit==='day')||(i===1&&curUnit==='hour')));save();closeMo('moInd');updTitle();renderAll();}
 
 /* ═══════════ ICAL ═══════════ */
 function openIcalMo(){
