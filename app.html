@@ -161,15 +161,71 @@ button,input,select,textarea{font-family:'Nanum Gothic',sans-serif}
 .cl-r{border-radius:4px 0 0 4px}.cl-r::after{display:none}
 
 /* MONTH VIEW */
-.mgrid{flex:1;overflow:auto;padding:10px 14px}
-.mcal{width:100%;border-collapse:collapse;table-layout:fixed}
-.mcal th{padding:5px;text-align:center;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.03em}
-.mcal td{padding:2px;vertical-align:top;border:1px solid var(--border)}
-.dcell{min-height:68px;background:var(--white);border-radius:3px;padding:4px;cursor:pointer;transition:background .1s;user-select:none}
-.dcell:hover{background:var(--paper2)}
-.dnum{font-size:11px;font-weight:700;font-family:'Nanum Gothic Coding',monospace;margin-bottom:2px;color:var(--ink2)}
-.dnum.tnow{color:var(--white);background:var(--ink);width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px}
-.dnum.om{opacity:.3}
+.mgrid{flex:1;overflow:auto;padding:12px 16px}
+.mcal{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.mcal thead th{
+  padding:8px 4px;text-align:center;
+  font-size:11px;font-weight:700;color:var(--ink3);
+  letter-spacing:.04em;
+}
+.mcal thead th.wknd-h{color:var(--accent)}
+.mcal thead th.sat-h{color:var(--blue)}
+.mcal td{padding:0;vertical-align:top;border:none}
+.dcell{
+  min-height:92px;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 6px 5px;
+  cursor:pointer;
+  transition:all .15s;
+  user-select:none;
+  position:relative;
+}
+.dcell:hover{background:var(--paper2);border-color:var(--ink3);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dcell.wknd-cell{background:#fff9f8}
+.dcell.sat-cell{background:#f6f8ff}
+.dcell.om-cell{background:transparent;border-color:transparent}
+.dnum{
+  font-size:16px;font-weight:700;
+  margin-bottom:4px;
+  color:var(--ink2);
+  line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+}
+.dnum.tnow{
+  color:#fff;background:var(--ink);
+  font-size:14px;
+}
+.dnum.om{color:var(--ink3);font-size:13px;font-weight:400}
+.dnum.wknd{color:var(--red)}
+.dnum.sat{color:var(--blue)}
+/* 예약 바 */
+.mo-bar{
+  position:relative;
+  height:22px;
+  margin-bottom:3px;
+}
+.mo-bar-inner{
+  position:absolute;
+  top:1px;bottom:1px;
+  display:flex;align-items:center;
+  padding:0 6px;
+  font-size:10px;font-weight:700;
+  overflow:hidden;white-space:nowrap;
+  cursor:pointer;
+  z-index:1;
+  gap:4px;
+}
+.mo-avatar{
+  width:16px;height:16px;border-radius:50%;
+  background:rgba(0,0,0,.18);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:800;color:#fff;
+  flex-shrink:0;
+}
+.mo-bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── YEAR VIEW (히트맵) ── */
 .ygrid{flex:1;overflow:auto;padding:14px 18px}
@@ -581,6 +637,7 @@ textarea{resize:vertical;min-height:56px}
       <div class="dprow"><span class="dpk">체크아웃</span><span class="dpv" id="dp-cout"></span></div>
       <div class="dprow"><span class="dpk">이용 기간</span><span class="dpv" id="dp-dur"></span></div>
       <div class="dprow"><span class="dpk">인원</span><span class="dpv" id="dp-guests"></span></div>
+      <div class="dprow" id="dp-children-row" style="display:none"><span class="dpk">어린이</span><span class="dpv" id="dp-children"></span></div>
       <div class="dprow"><span class="dpk">국가</span><span class="dpv" id="dp-country"></span></div>
     </div>
     <div class="dpsec">
@@ -610,7 +667,12 @@ textarea{resize:vertical;min-height:56px}
         <div class="fgrp"><label>이름 (한국어/현지어)</label><input type="text" id="f-name" placeholder="김지현 / 田中 健"></div>
         <div class="fgrp"><label>영문명 (선택)</label><input type="text" id="f-name-en" placeholder="Jihyeon Kim"></div>
         <div class="fgrp full"><div class="fsec">예약 정보</div></div>
-        <div class="fgrp"><label>공간</label><select id="f-room"></select></div>
+        <div class="fgrp"><label>공간</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="f-room" style="flex:1"></select>
+            <button type="button" onclick="openRoomEditMo()" title="공간 이름 편집" style="padding:7px 10px;background:var(--paper2);border:1px solid var(--border);border-radius:var(--r);font-size:14px;cursor:pointer;color:var(--ink2);flex-shrink:0;transition:all .15s" onmouseover="this.style.background='var(--paper3)'" onmouseout="this.style.background='var(--paper2)'">✏️</button>
+          </div>
+        </div>
         <div class="fgrp"><label>상태</label>
           <select id="f-status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select>
         </div>
@@ -618,7 +680,15 @@ textarea{resize:vertical;min-height:56px}
         <div class="fgrp"><label id="lbl-cout">체크아웃</label><input type="date" id="f-cout"></div>
         <div class="fgrp" id="fg-cin-t" style="display:none"><label>시작 시간</label><input type="time" id="f-cin-t" value="10:00"></div>
         <div class="fgrp" id="fg-cout-t" style="display:none"><label>종료 시간</label><input type="time" id="f-cout-t" value="12:00"></div>
-        <div class="fgrp"><label>인원</label><input type="number" id="f-guests" min="1" max="500" value="2"></div>
+        <div class="fgrp full"><div class="fsec">인원 정보</div></div>
+        <div class="fgrp">
+          <label>성인 👤</label>
+          <input type="number" id="f-adults" min="0" max="100" value="2" placeholder="0">
+        </div>
+        <div class="fgrp">
+          <label>어린이 👶 <span style="font-size:10px;color:var(--ink3);font-weight:400">(만 12세 미만)</span></label>
+          <input type="number" id="f-children" min="0" max="100" value="0" placeholder="0">
+        </div>
         <div class="fgrp"><label>국가</label><select id="f-country"></select></div>
         <div class="fgrp full"><div class="fsec">예약 채널</div></div>
         <div class="fgrp full">
@@ -638,6 +708,22 @@ textarea{resize:vertical;min-height:56px}
       <button class="bdl" id="btnDel" onclick="delRes()" style="display:none">삭제</button>
       <button class="bcl" onclick="closeMo('moAdd')">취소</button>
       <button class="bsv" onclick="saveRes()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM NAME EDIT MODAL -->
+<div class="moverlay" id="moRoomEdit" onclick="closeMoBg(event,'moRoomEdit')">
+  <div class="modal" style="max-width:400px">
+    <div class="mhd"><h3 class="mtitle">공간 이름 편집</h3><button class="mclose" onclick="closeMo('moRoomEdit')">✕</button></div>
+    <div class="mbody">
+      <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">공간 이름을 변경하면 기존 예약에도 즉시 반영됩니다.</p>
+      <div id="roomEditList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button onclick="addRoomSlot()" style="margin-top:12px;width:100%;padding:9px;border:1.5px dashed var(--border);border-radius:var(--r);background:transparent;color:var(--ink3);font-size:13px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink3)'">+ 공간 추가</button>
+    </div>
+    <div class="mft">
+      <button class="bcl" onclick="closeMo('moRoomEdit')">취소</button>
+      <button class="bsv" onclick="saveRoomNames()">저장</button>
     </div>
   </div>
 </div>
@@ -1179,41 +1265,60 @@ function renderTLHour(){
 function renderMonth(){
   const el=document.getElementById('mCal');
   const y=curDate.getFullYear(),m=curDate.getMonth(),ts=toStr(),fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
-  const DAYS=['일','월','화','수','목','금','토'];
+  const DAYS=[
+    {label:'일',cls:'wknd-h'},
+    {label:'월',cls:''},
+    {label:'화',cls:''},
+    {label:'수',cls:''},
+    {label:'목',cls:''},
+    {label:'금',cls:''},
+    {label:'토',cls:'sat-h'}
+  ];
   function getDayRes(ds){return reservations.filter(r=>r.cin<=ds&&r.cout>ds&&r.status!=='cancelled');}
-  let html=`<thead><tr>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
+  let html=`<thead><tr>${DAYS.map(d=>`<th class="${d.cls}">${d.label}</th>`).join('')}</tr></thead><tbody>`;
   let day=1-fd;
   for(let row=0;row<6;row++){
     if(day>dim) break;
     html+='<tr>';
     for(let col=0;col<7;col++,day++){
+      const isSun=col===0,isSat=col===6,isWknd=isSun||isSat;
       if(day<1||day>dim){
-        html+=`<td><div class="dcell" style="min-height:72px"><div class="dnum om">${day<1?new Date(y,m,day).getDate():day-dim}</div></div></td>`;
+        const ghostDay=day<1?new Date(y,m,day).getDate():day-dim;
+        html+=`<td><div class="dcell om-cell" style="min-height:92px"><div class="dnum om">${ghostDay}</div></div></td>`;
       } else {
         const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,iT=ds===ts;
         const dayRes=getDayRes(ds);
         const isFirst=col===0,isLast=col===6;
+        const cellCls=`dcell${isWknd?(isSun?' wknd-cell':' sat-cell'):''}`;
+        const numCls=`dnum${iT?' tnow':isSun?' wknd':isSat?' sat':''}`;
         const bars=dayRes.map(res=>{
           const c=getCol(res.color);
           const nextDs=new Date(new Date(ds).getTime()+86400000).toISOString().split('T')[0];
           const isStart=res.cin===ds,isEnd=res.cout===nextDs,isSingle=isStart&&isEnd;
-          let left='0',right='0',bStyle='';
-          const bEdge=`border-top:1.5px solid ${c.border};border-bottom:1.5px solid ${c.border};`;
+          let left='0',right='0',borderR='',borderL='';
+          const bEdge=`border-top:2px solid ${c.border};border-bottom:2px solid ${c.border};`;
           if(isSingle){
-            left='2px';right='2px';bStyle=`border:1.5px solid ${c.border};border-radius:3px;`;
+            left='2px';right='2px';
+            borderL=`border-left:2px solid ${c.border};border-radius:6px 0 0 6px;`;
+            borderR=`border-right:2px solid ${c.border};border-radius:0 6px 6px 0;`;
+            borderL=`border:2px solid ${c.border};border-radius:6px;`;borderR='';
           } else if(isStart){
-            left='2px';right=isLast?'2px':'-1px';
-            bStyle=`${bEdge}border-left:1.5px solid ${c.border};border-radius:3px 0 0 3px;`;
+            left='2px';right=isLast?'2px':'-2px';
+            borderL=`${bEdge}border-left:2px solid ${c.border};border-radius:6px 0 0 6px;`;
           } else if(isEnd){
-            left=isFirst?'2px':'-1px';right='2px';
-            bStyle=`${bEdge}border-right:1.5px solid ${c.border};border-radius:0 3px 3px 0;`;
+            left=isFirst?'2px':'-2px';right='2px';
+            borderL=`${bEdge}border-right:2px solid ${c.border};border-radius:0 6px 6px 0;`;
           } else {
-            left=isFirst?'2px':'-1px';right=isLast?'2px':'-1px';bStyle=bEdge;
+            left=isFirst?'2px':'-2px';right=isLast?'2px':'-2px';borderL=bEdge;
           }
-          const label=(isStart||isSingle)?`${res.sticker||''}${res.name}`:'';
-          return `<div style="position:relative;height:16px;margin-bottom:2px"><div style="position:absolute;top:1px;bottom:1px;left:${left};right:${right};background:${c.bg};color:${c.text};${bStyle}display:flex;align-items:center;padding:0 5px;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;cursor:pointer;z-index:1" onclick="selRes(${res.id});event.stopPropagation()" title="${res.name}${res.channel?' · '+res.channel:''}">${label}</div></div>`;
+          const showLabel=isStart||isSingle;
+          const avatarLetter=(res.name||'?')[0].toUpperCase();
+          const labelHtml=showLabel
+            ? `<div class="mo-avatar" style="background:${c.text}20;color:${c.text}">${avatarLetter}</div><span class="mo-bar-name">${res.sticker||''}${res.name}</span>`
+            : '';
+          return `<div class="mo-bar"><div class="mo-bar-inner" style="left:${left};right:${right};background:${c.bg};color:${c.text};${borderL}" onclick="selRes(${res.id});event.stopPropagation()" title="${res.name}${res.channel?' · '+res.channel:''}">${labelHtml}</div></div>`;
         }).join('');
-        html+=`<td><div class="dcell" style="min-height:72px" onclick="openAddDate('','${ds}')"><div class="dnum${iT?' tnow':''}">${day}</div>${bars}</div></td>`;
+        html+=`<td><div class="${cellCls}" onclick="openAddDate('','${ds}')"><div class="${numCls}">${day}</div>${bars}</div></td>`;
       }
     }
     html+='</tr>';
@@ -1254,7 +1359,10 @@ function selRes(id){
   document.getElementById('dp-cin').textContent=r.cin+(r.cinT?' '+r.cinT:'');
   document.getElementById('dp-cout').textContent=r.cout+(r.coutT?' '+r.coutT:'');
   document.getElementById('dp-dur').textContent=durLbl(r);
-  document.getElementById('dp-guests').textContent=r.guests+'명';
+  const adultCnt=r.adults||r.guests||1, childCnt=r.children||0;
+  document.getElementById('dp-guests').textContent=`성인 ${adultCnt}명${childCnt>0?` · 어린이 ${childCnt}명`:''}`;
+  const childRow=document.getElementById('dp-children-row');
+  childRow.style.display='none'; // 통합 표시로 변경됨
   document.getElementById('dp-country').textContent=cName(r.country);
   document.getElementById('dp-amt').textContent=money(r.amount);
   document.getElementById('dp-uamt').textContent=uAmt(r);
@@ -1299,7 +1407,7 @@ function openAddMo(){
   ['f-name','f-name-en','f-memo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-status').value='confirmed';document.getElementById('f-cin').value=t;document.getElementById('f-cout').value=t2;
   document.getElementById('f-cin-t').value='10:00';document.getElementById('f-cout-t').value='12:00';
-  document.getElementById('f-guests').value=2;document.getElementById('f-country').value='';document.getElementById('f-amount').value='';
+  document.getElementById('f-adults').value=2;document.getElementById('f-children').value=0;document.getElementById('f-country').value='';document.getElementById('f-amount').value='';
   pColor=BLOCK_COLORS[0].id;pSticker='';pChannel='';
   buildForm();buildColPicker(pColor);buildStPicker(pSticker);
   document.getElementById('moAdd').classList.add('open');
@@ -1315,7 +1423,7 @@ function openEditMo(id){
   document.getElementById('f-room').value=r.room;document.getElementById('f-status').value=r.status;
   document.getElementById('f-cin').value=r.cin;document.getElementById('f-cout').value=r.cout;
   document.getElementById('f-cin-t').value=r.cinT||'10:00';document.getElementById('f-cout-t').value=r.coutT||'12:00';
-  document.getElementById('f-guests').value=r.guests;document.getElementById('f-country').value=r.country||'';
+  document.getElementById('f-adults').value=r.adults||r.guests||1;document.getElementById('f-children').value=r.children||0;document.getElementById('f-country').value=r.country||'';
   document.getElementById('f-amount').value=r.amount;document.getElementById('f-memo').value=r.memo||'';
   buildColPicker(pColor);buildStPicker(pSticker);buildChPicker(pChannel);
   document.getElementById('moAdd').classList.add('open');
@@ -1325,11 +1433,57 @@ function saveRes(){
   if(!name){alert('이름을 입력해주세요');return;}if(!cin||!cout){alert('날짜를 입력해주세요');return;}
   if(curUnit==='day'&&cin>=cout){alert('체크아웃이 체크인보다 이를 수 없습니다');return;}
   const isH=curUnit==='hour';
-  const data={name,nameEn:document.getElementById('f-name-en').value.trim(),room:document.getElementById('f-room').value,status:document.getElementById('f-status').value,cin,cout,cinT:isH?document.getElementById('f-cin-t').value:'',coutT:isH?document.getElementById('f-cout-t').value:'',guests:parseInt(document.getElementById('f-guests').value)||1,country:document.getElementById('f-country').value,channel:getCh(),amount:parseInt(document.getElementById('f-amount').value)||0,memo:document.getElementById('f-memo').value.trim(),color:pColor,sticker:pSticker};
+  const adults=parseInt(document.getElementById('f-adults').value)||1;
+  const children=parseInt(document.getElementById('f-children').value)||0;
+  const data={name,nameEn:document.getElementById('f-name-en').value.trim(),room:document.getElementById('f-room').value,status:document.getElementById('f-status').value,cin,cout,cinT:isH?document.getElementById('f-cin-t').value:'',coutT:isH?document.getElementById('f-cout-t').value:'',adults,children,guests:adults+children,country:document.getElementById('f-country').value,channel:getCh(),amount:parseInt(document.getElementById('f-amount').value)||0,memo:document.getElementById('f-memo').value.trim(),color:pColor,sticker:pSticker};
   if(editingId){const idx=reservations.findIndex(r=>r.id===editingId);reservations[idx]={...reservations[idx],...data};toast('수정되었습니다');const uid=editingId;closeMo('moAdd');save();renderAll();selRes(uid);}
   else{data.id=nextId++;reservations.push(data);toast('예약이 추가되었습니다');const nid=data.id;closeMo('moAdd');save();renderAll();selRes(nid);}
 }
 function delRes(){if(!editingId||!confirm('삭제하시겠습니까?'))return;reservations=reservations.filter(r=>r.id!==editingId);save();closeMo('moAdd');closeDetail();renderAll();toast('삭제되었습니다');}
+
+/* ═══════════ ROOM EDIT ═══════════ */
+function openRoomEditMo(){
+  renderRoomEditList();
+  document.getElementById('moRoomEdit').classList.add('open');
+}
+function renderRoomEditList(){
+  document.getElementById('roomEditList').innerHTML=industry.rooms.map((rm,i)=>`
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" value="${rm}" id="re-room-${i}" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--white)" placeholder="공간 이름">
+      <button onclick="removeRoomSlot(${i})" title="삭제" style="padding:7px 9px;background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--ink3);cursor:pointer;font-size:13px;flex-shrink:0" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--ink3)';this.style.borderColor='var(--border)'">✕</button>
+    </div>`).join('');
+}
+function addRoomSlot(){
+  industry.rooms.push('새 공간');
+  renderRoomEditList();
+  const inputs=document.querySelectorAll('#roomEditList input');
+  const last=inputs[inputs.length-1];
+  last.focus();last.select();
+}
+function removeRoomSlot(idx){
+  if(industry.rooms.length<=1){alert('최소 1개 공간이 필요합니다');return;}
+  industry.rooms.splice(idx,1);
+  renderRoomEditList();
+}
+function saveRoomNames(){
+  const inputs=document.querySelectorAll('#roomEditList input');
+  const newRooms=Array.from(inputs).map(el=>el.value.trim()).filter(Boolean);
+  if(!newRooms.length){alert('공간 이름을 1개 이상 입력해주세요');return;}
+  const oldRooms=[...industry.rooms];
+  industry.rooms=newRooms;
+  // 기존 예약의 room 값도 업데이트 (이름 변경된 경우 매핑)
+  reservations=reservations.map(r=>{
+    const idx=oldRooms.indexOf(r.room);
+    if(idx>=0&&newRooms[idx])return{...r,room:newRooms[idx]};
+    return r;
+  });
+  save();
+  closeMo('moRoomEdit');
+  // 폼의 공간 select 다시 빌드
+  document.getElementById('f-room').innerHTML=industry.rooms.map(r=>`<option value="${r}">${r}</option>`).join('');
+  renderAll();
+  toast('공간 이름이 저장되었습니다 ✓');
+}
 
 /* ═══════════ INDUSTRY ═══════════ */
 function openIndMo(){
