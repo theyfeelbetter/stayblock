@@ -1338,10 +1338,12 @@ function navigate(dir){if(curUnit==='hour')curDate=new Date(curDate.getTime()+di
 function goToday(){curDate=new Date();updTitle();renderAll();}
 function switchView(v,btn){
   curView=v;
-  document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  document.getElementById('view-tl').style.display=v==='tl'?'':'none';
-  document.getElementById('view-mo').style.display=v==='mo'?'':'none';
-  document.getElementById('view-yr').style.display=v==='yr'?'':'none';
+  document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');
+  document.getElementById('view-tl').style.display=v==='tl'?'flex':'none';
+  document.getElementById('view-mo').style.display=v==='mo'?'flex':'none';
+  document.getElementById('view-yr').style.display=v==='yr'?'flex':'none';
+  const syncEl=document.getElementById('view-sync');if(syncEl)syncEl.style.display=v==='sync'?'flex':'none';
+  if(v==='sync'){if(typeof renderSyncLogs==='function')renderSyncLogs();return;}
   gaEvent('view_switch','calendar',v);
   renderAll();
 }
@@ -2062,24 +2064,8 @@ function runSyncAll(){
   gaEvent('sync_all','via','run',total);
 }
 
-/* switchView override for sync log */
-const _origSwitchView=switchView;
-function switchView(v,btn){
-  if(v==='sync'){
-    document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('on'));
-    if(btn)btn.classList.add('on');
-    ['tl','mo','yr','sync'].forEach(id=>{
-      const el=document.getElementById('view-'+id);
-      if(el)el.style.display=id===v?'':'none';
-    });
-    renderSyncLogs();
-    return;
-  }
-  // show sync view container as flex when needed
-  const sv=document.getElementById('view-sync');
-  if(sv)sv.style.display='none';
-  _origSwitchView(v,btn);
-}
+/* switchView — sync log 포함 통합 처리 (override 제거) */
+// sync view는 switchView 본함수에서 통합 처리됨 (위 함수 참고)
 
 function initAuth(){
   const sess = localStorage.getItem('sb_session');
