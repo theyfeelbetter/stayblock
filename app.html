@@ -325,8 +325,11 @@ textarea{resize:vertical;min-height:56px}
 .ind-sub{font-size:10px;color:var(--ink3);margin-top:2px;line-height:1.4}
 
 /* ICAL MODAL */
-.ical-zone{border:2px dashed var(--border);border-radius:var(--rl);padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:11px}
-.ical-zone:hover,.ical-zone.drag{border-color:var(--ink2);background:rgba(0,0,0,.02)}
+.ical-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink3);font-family:'Nanum Gothic',sans-serif;transition:all .15s;white-space:nowrap}
+.ical-tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.ical-tab:hover:not(.on){color:var(--ink2)}
+.ical-zone{border:2px dashed var(--border);border-radius:var(--rl);padding:28px 20px;text-align:center;transition:all .15s;margin-bottom:11px}
+.ical-zone:hover,.ical-zone.drag{border-color:var(--ink);background:rgba(0,0,0,.02);border-style:solid}
 .ical-url-row{display:flex;gap:7px;margin-bottom:9px}
 .ical-url-row input{flex:1}
 .ical-url-row button{white-space:nowrap;padding:8px 13px;background:var(--ink);color:var(--white);border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif}
@@ -739,29 +742,66 @@ textarea{resize:vertical;min-height:56px}
 
 <!-- ICAL MODAL -->
 <div class="moverlay" id="moIcal" onclick="closeMoBg(event,'moIcal')">
-  <div class="modal" style="max-width:500px">
-    <div class="mhd"><h3 class="mtitle">iCal 동기화</h3><button class="mclose" onclick="closeMo('moIcal')">✕</button></div>
-    <div class="mbody">
-      <p style="font-size:13px;color:var(--ink2);margin-bottom:14px;line-height:1.7">에어비앤비·부킹닷컴·네이버 예약의 iCal URL을 입력하거나 .ics 파일을 업로드하면 예약이 자동으로 등록됩니다.</p>
-      <div class="ical-url-row">
-        <input type="text" id="ical-url" placeholder="https://airbnb.com/calendar/ical/...ics">
-        <button onclick="fetchIcal()">가져오기</button>
+  <div class="modal" style="max-width:520px">
+    <div class="mhd"><h3 class="mtitle">📅 외부 캘린더 연동</h3><button class="mclose" onclick="closeMo('moIcal')">✕</button></div>
+    <div class="mbody" style="padding-bottom:0">
+
+      <!-- 공간 선택 (연동 전 필수 선택) -->
+      <div style="background:var(--paper2);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap">연동할 공간:</label>
+        <select id="ical-room-sel" style="flex:1;min-width:120px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:'Nanum Gothic',sans-serif;background:#fff"></select>
+        <span style="font-size:11px;color:var(--ink3)">가져온 예약이 이 공간에 등록됩니다</span>
       </div>
-      <div class="samp-btns">
-        <button class="samp-btn" onclick="loadSample('airbnb')">🏠 에어비앤비 샘플</button>
-        <button class="samp-btn" onclick="loadSample('booking')">🌐 부킹닷컴 샘플</button>
-        <button class="samp-btn" onclick="loadSample('naver')">🟢 네이버 샘플</button>
+
+      <!-- 탭 -->
+      <div style="display:flex;border-bottom:1px solid var(--border);margin:0 -20px;padding:0 20px;gap:0;margin-bottom:16px">
+        <button class="ical-tab on" id="itab-file" onclick="switchIcalTab('file',this)">📁 파일 업로드 <span style="font-size:10px;background:#e8f5ee;color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">권장</span></button>
+        <button class="ical-tab" id="itab-url" onclick="switchIcalTab('url',this)">🔗 URL 연동 <span style="font-size:10px;color:var(--ink3)">(구글만 지원)</span></button>
+        <button class="ical-tab" id="itab-sample" onclick="switchIcalTab('sample',this)">🧪 샘플 테스트</button>
       </div>
-      <div class="ical-zone" id="icalZone" ondragover="icalDrag(event,true)" ondragleave="icalDrag(event,false)" ondrop="icalDrop(event)">
-        <div style="font-size:28px;margin-bottom:5px">📅</div>
-        <div style="font-size:13px;font-weight:500">.ics 파일 드래그 또는 클릭해서 업로드</div>
-        <input type="file" id="icalFile" accept=".ics" style="display:none" onchange="icalFileRead(this)">
+
+      <!-- 파일 업로드 패널 -->
+      <div id="ipanel-file">
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:10px;padding:10px 12px;background:#fff8e1;border-radius:var(--r);border-left:3px solid #ffc107;line-height:1.7">
+          <strong>에어비앤비·부킹닷컴 연동 방법</strong><br>
+          에어비앤비 → <em>캘린더 → 내보내기</em> → .ics 파일 다운로드 → 아래 업로드<br>
+          부킹닷컴 → <em>계정 → iCal 내보내기</em> → .ics 파일 다운로드 → 아래 업로드
+        </div>
+        <div class="ical-zone" id="icalZone" ondragover="icalDrag(event,true)" ondragleave="icalDrag(event,false)" ondrop="icalDrop(event)" onclick="document.getElementById('icalFile').click()" style="cursor:pointer">
+          <div style="font-size:32px;margin-bottom:6px">📤</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">.ics 파일을 드래그하거나 클릭해서 선택</div>
+          <div style="font-size:11px;color:var(--ink3)">에어비앤비·부킹닷컴·네이버·구글캘린더 iCal 파일 지원</div>
+          <input type="file" id="icalFile" accept=".ics" style="display:none" onchange="icalFileRead(this)">
+        </div>
       </div>
-      <div class="ical-res" id="icalRes"></div>
-      <div class="ical-sl" id="icalSL"></div>
+
+      <!-- URL 패널 -->
+      <div id="ipanel-url" style="display:none">
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:10px;padding:10px 12px;background:var(--paper2);border-radius:var(--r);line-height:1.7">
+          ⚠️ 에어비앤비·부킹닷컴은 보안 정책으로 URL 직접 연동이 차단됩니다.<br>
+          <strong>구글 캘린더</strong>(공개 설정 후), 일부 PMS 시스템만 URL 연동이 가능합니다.
+        </div>
+        <div class="ical-url-row">
+          <input type="text" id="ical-url" placeholder="https://calendar.google.com/calendar/ical/...ics">
+          <button onclick="fetchIcal()">가져오기</button>
+        </div>
+      </div>
+
+      <!-- 샘플 패널 -->
+      <div id="ipanel-sample" style="display:none">
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:12px">실제 예약 데이터가 없어도 달력에 어떻게 표시되는지 바로 확인할 수 있습니다.</div>
+        <div class="samp-btns">
+          <button class="samp-btn" onclick="loadSample('airbnb')">🏠 에어비앤비 샘플</button>
+          <button class="samp-btn" onclick="loadSample('booking')">🌐 부킹닷컴 샘플</button>
+          <button class="samp-btn" onclick="loadSample('naver')">🟢 네이버 샘플</button>
+        </div>
+      </div>
+
+      <div class="ical-res" id="icalRes" style="margin-top:12px"></div>
+      <div class="ical-sl" id="icalSL" style="margin-top:8px"></div>
     </div>
       <!-- VIA export URL 섹션 -->
-      <div id="icalExportSection" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div id="icalExportSection" style="display:none;margin-top:14px;padding:14px 20px;border-top:1px solid var(--border)">
         <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">📤 내 공실 캘린더 공유 URL (Export-ICAL)</div>
         <div style="font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.6">이 URL을 에어비앤비 <strong>다른 앱 캘린더 가져오기</strong>에 등록하면 VIA 예약이 자동 블로킹됩니다.</div>
         <div id="icalExportList"></div>
@@ -1584,8 +1624,27 @@ function pickInd(id){pendingInd=id;document.querySelectorAll('.ind-card').forEac
 function saveIndustry(){industry=INDUSTRIES.find(i=>i.id===pendingInd)||INDUSTRIES[0];curUnit=industry.unit;industry.roomColors=[];localStorage.removeItem('sb3rooms');document.getElementById('hd-icon').textContent=industry.icon;document.getElementById('hd-name').textContent=industry.name;document.querySelectorAll('.utab').forEach((b,i)=>b.classList.toggle('on',(i===0&&curUnit==='day')||(i===1&&curUnit==='hour')));save();closeMo('moInd');updTitle();renderAll();}
 
 /* ═══════════ ICAL ═══════════ */
+function switchIcalTab(tab,btn){
+  ['file','url','sample'].forEach(t=>{
+    document.getElementById('ipanel-'+t).style.display=t===tab?'':'none';
+    document.getElementById('itab-'+t).classList.toggle('on',t===tab);
+  });
+}
+
 function openIcalMo(){
+  // 공간 선택 드롭다운 채우기
+  const sel=document.getElementById('ical-room-sel');
+  sel.innerHTML=industry.rooms.map((r,i)=>`<option value="${r}"${i===0?' selected':''}>${r}</option>`).join('');
+
+  // 기본 탭: 파일 업로드
+  switchIcalTab('file',document.getElementById('itab-file'));
+
+  // 결과창 초기화
+  const resEl=document.getElementById('icalRes');
+  resEl.classList.remove('show');resEl.innerHTML='';
+
   renderIcalList();
+
   /* VIA export URL 섹션 */
   const expSec=document.getElementById('icalExportSection');
   const expList=document.getElementById('icalExportList');
@@ -1762,6 +1821,7 @@ function srcLabel(url){
 async function fetchIcal(){
   const url=document.getElementById('ical-url').value.trim();
   if(!url){alert('URL을 입력해주세요');return;}
+  const targetRoom=document.getElementById('ical-room-sel')?.value||industry.rooms[0];
   const resEl=document.getElementById('icalRes');
   resEl.classList.add('show');
 
@@ -1787,16 +1847,16 @@ async function fetchIcal(){
         ${logs.map(l=>`• ${l}`).join('<br>')}
       </div>
       <div style="font-size:12px;color:var(--ink2);line-height:1.8">
-        <strong>✅ 해결 방법:</strong><br>
-        ① <strong>에어비앤비</strong> → 캘린더 → <em>내보내기 → .ics 다운로드</em> → 아래 파일 업로드 사용<br>
-        ② <strong>부킹닷컴</strong> → 계정설정 → iCal 내보내기 → .ics 파일 다운로드<br>
-        ③ <strong>구글캘린더</strong> → 캘린더 설정 → 캘린더 공개 → URL 사용 가능<br>
-        ④ 에어비앤비·부킹닷컴은 보안상 외부 직접 접근 차단 (CORS 정책) — .ics 파일 방식 권장
-      </div>`;
+        ✅ <strong>파일 업로드 탭</strong>으로 이동해서 .ics 파일을 직접 올려주세요.<br>
+        에어비앤비·부킹닷컴은 보안 정책상 URL 직접 연동이 차단됩니다.
+      </div>
+      <button onclick="switchIcalTab('file',document.getElementById('itab-file'))" style="margin-top:10px;padding:7px 14px;background:var(--ink);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif">
+        📁 파일 업로드로 전환 →
+      </button>`;
     return;
   }
 
-  const parsed=parseICS(result.text,src);
+  const parsed=parseICS(result.text,src,targetRoom);
   if(!parsed.length){
     resEl.innerHTML=`<span style="color:var(--amber)">⚠️ 파싱된 이벤트가 없습니다. .ics 형식이 맞는지 확인해주세요.<br>
       <span style="font-size:11px">(가져온 응답 앞 200자: ${result.text.slice(0,200)})</span></span>`;
@@ -1805,9 +1865,9 @@ async function fetchIcal(){
   const{added,updated,total}=applyParsed(parsed,src,url);
   const viaNote=result.via==='proxy'?` <span style="color:var(--ink3);font-size:10px">(CORS 프록시 경유)</span>`:'';
   const blocks=parsed.filter(r=>r.icalBlock).length;
-  resEl.innerHTML=`✅ <strong>${src}</strong>에서 ${total}건 가져옴${viaNote}<br>
+  resEl.innerHTML=`✅ <strong>${src}</strong> → <strong>${targetRoom}</strong>에 ${total}건 등록${viaNote}<br>
     <span style="font-size:11px;color:var(--ink3)">신규 ${added}건 추가 · ${updated}건 업데이트${blocks?` · 공실블록 ${blocks}건`:''}`;
-  toast(`${added}건 추가 · ${updated}건 업데이트`);
+  toast(`${added}건 추가 → ${targetRoom}`);
 }
 
 /* ─── 샘플 데이터 (버튼용) ─── */
@@ -1832,16 +1892,32 @@ function loadSample(t){
 }
 function icalFileRead(inp){
   const file=inp.files[0];if(!file)return;
+  const targetRoom=document.getElementById('ical-room-sel')?.value||industry.rooms[0];
+  const src=file.name.replace(/\.ics$/i,'');
   const reader=new FileReader();
   reader.onload=e=>{
-    const parsed=parseICS(e.target.result,file.name.replace('.ics',''));
-    const existing=new Set(reservations.map(r=>r.icalUid).filter(Boolean));
-    const newR=parsed.filter(r=>!existing.has(r.icalUid));
-    reservations.push(...newR);save();renderAll();
-    const el=document.getElementById('icalRes');el.classList.add('show');el.textContent=`✅ 파일에서 ${newR.length}건 추가`;
-    toast(`${newR.length}건 추가됨`);
+    const text=e.target.result;
+    if(!text.includes('VCALENDAR')){
+      const el=document.getElementById('icalRes');el.classList.add('show');
+      el.innerHTML=`<span style="color:var(--red)">⚠️ iCal 형식이 아닙니다. .ics 파일만 업로드 가능합니다.</span>`;
+      return;
+    }
+    const parsed=parseICS(text,src,targetRoom);
+    if(!parsed.length){
+      const el=document.getElementById('icalRes');el.classList.add('show');
+      el.innerHTML=`<span style="color:var(--amber)">⚠️ 파싱된 예약이 없습니다. 파일에 VEVENT가 포함되어 있는지 확인하세요.</span>`;
+      return;
+    }
+    const{added,updated,total}=applyParsed(parsed,src,`file://${src}`);
+    const blocks=parsed.filter(r=>r.icalBlock).length;
+    const el=document.getElementById('icalRes');el.classList.add('show');
+    el.innerHTML=`✅ <strong>${src}</strong> → <strong>${targetRoom}</strong>에 ${total}건 등록<br>
+      <span style="font-size:11px;color:var(--ink3)">신규 ${added}건 추가 · ${updated}건 업데이트${blocks?` · 공실블록 ${blocks}건`:''}`;
+    toast(`${added}건 추가 → ${targetRoom}`);
+    // 파일 입력 초기화 (같은 파일 재업로드 가능)
+    inp.value='';
   };
-  reader.readAsText(file);
+  reader.readAsText(file,'UTF-8');
 }
 function icalDrag(e,on){e.preventDefault();document.getElementById('icalZone').classList.toggle('drag',on);}
 function icalDrop(e){e.preventDefault();icalDrag(e,false);const f=e.dataTransfer.files[0];if(f){const inp=document.getElementById('icalFile');const dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;icalFileRead(inp);}}
