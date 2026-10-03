@@ -1667,26 +1667,67 @@ function parseICS(text,src,targetRoom){
 }
 
 /* ─── CORS 프록시를 통한 실제 URL fetch ─── */
-const CORS_PROXIES=[
-  u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-];
-async function fetchIcsText(url){
+/* 진행상황 콜백: fn(msg) */
+async function fetchIcsText(url, onProgress){
+  const log=msg=>{if(onProgress)onProgress(msg);};
+
   // 1차: 직접 fetch 시도
+  log('직접 연결 시도 중…');
   try{
-    const r=await fetch(url,{mode:'cors',cache:'no-store'});
-    if(r.ok){const t=await r.text();if(t.includes('VCALENDAR'))return{text:t,via:'direct'};}
-  }catch(e){}
-  // 2차: CORS 프록시 순차 시도
-  for(const mkProxy of CORS_PROXIES){
-    try{
-      const r=await fetch(mkProxy(url),{cache:'no-store'});
-      if(!r.ok) continue;
-      const json=await r.json().catch(()=>null);
-      const text=json?(json.contents||json.body||''):await r.text();
-      if(text.includes('VCALENDAR'))return{text,via:'proxy'};
-    }catch(e){}
-  }
+    const r=await fetch(url,{mode:'cors',cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(r.ok){
+      const t=await r.text();
+      if(t.includes('VCALENDAR')){log('직접 연결 성공');return{text:t,via:'direct'};}
+      log('직접 연결: 응답은 받았으나 iCal 형식이 아님');
+    } else {
+      log(`직접 연결: HTTP ${r.status} 오류`);
+    }
+  }catch(e){log(`직접 연결 차단 (CORS): ${e.message||e}`);}
+
+  // 2차: corsproxy.io (plain text 반환)
+  log('CORS 프록시 1 시도 중 (corsproxy.io)…');
+  try{
+    const proxyUrl=`https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+    const r=await fetch(proxyUrl,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(r.ok){
+      const text=await r.text();
+      if(text.includes('VCALENDAR')){log('corsproxy.io 성공');return{text,via:'proxy'};}
+      log('corsproxy.io: 응답받음, iCal 아님 (응답 앞 100자: '+text.slice(0,100)+')');
+    } else {
+      log(`corsproxy.io: HTTP ${r.status}`);
+    }
+  }catch(e){log(`corsproxy.io 실패: ${e.message||e}`);}
+
+  // 3차: allorigins.win (JSON 래핑 응답)
+  log('CORS 프록시 2 시도 중 (allorigins.win)…');
+  try{
+    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const r=await fetch(proxyUrl,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(r.ok){
+      const json=await r.json();
+      const text=json.contents||'';
+      if(text.includes('VCALENDAR')){log('allorigins.win 성공');return{text,via:'proxy'};}
+      log('allorigins.win: 응답받음, iCal 아님 (앞 100자: '+text.slice(0,100)+')');
+    } else {
+      log(`allorigins.win: HTTP ${r.status}`);
+    }
+  }catch(e){log(`allorigins.win 실패: ${e.message||e}`);}
+
+  // 4차: cors.sh (무료 CORS 헤더 프록시)
+  log('CORS 프록시 3 시도 중 (thingproxy)…');
+  try{
+    const proxyUrl=`https://thingproxy.freeboard.io/fetch/${url}`;
+    const r=await fetch(proxyUrl,{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(r.ok){
+      const text=await r.text();
+      if(text.includes('VCALENDAR')){log('thingproxy 성공');return{text,via:'proxy'};}
+      log('thingproxy: iCal 아님');
+    } else {
+      log(`thingproxy: HTTP ${r.status}`);
+    }
+  }catch(e){log(`thingproxy 실패: ${e.message||e}`);}
+
+  log('모든 경로 실패 — .ics 파일 직접 업로드를 사용해주세요');
   return null;
 }
 
@@ -1723,30 +1764,49 @@ async function fetchIcal(){
   if(!url){alert('URL을 입력해주세요');return;}
   const resEl=document.getElementById('icalRes');
   resEl.classList.add('show');
-  resEl.innerHTML='<span style="color:var(--ink3)">⏳ 외부 캘린더 가져오는 중...</span>';
+
+  // 실시간 진행 로그 표시
+  const logs=[];
+  const showLog=()=>{
+    resEl.innerHTML=`<div style="color:var(--ink3);font-size:11px;line-height:1.8">
+      <span style="color:var(--ink2);font-weight:700">⏳ 외부 캘린더 연동 중...</span><br>
+      ${logs.map(l=>`• ${l}`).join('<br>')}
+    </div>`;
+  };
+  const onProgress=msg=>{logs.push(msg);showLog();};
+  showLog();
+
   const src=srcLabel(url);
-  const result=await fetchIcsText(url);
+  const result=await fetchIcsText(url,onProgress);
+
   if(!result){
-    // fetch 실패 시 사용자에게 방법 안내
-    resEl.innerHTML=`<div style="color:var(--red);font-weight:700;margin-bottom:6px">⚠️ URL에서 직접 가져올 수 없습니다</div>
-      <div style="font-size:11px;color:var(--ink2);line-height:1.7">
-        <strong>해결 방법:</strong><br>
-        ① 에어비앤비 → <em>캘린더 → 내보내기 → .ics 다운로드</em> 후 아래 파일 업로드<br>
-        ② 구글 캘린더는 공개 설정 후 URL 사용 가능<br>
-        ③ 일부 채널은 CORS 정책으로 브라우저 직접 접근 불가
+    resEl.innerHTML=`
+      <div style="color:var(--red);font-weight:700;margin-bottom:8px">⚠️ URL에서 자동으로 가져올 수 없습니다</div>
+      <div style="font-size:11px;color:var(--ink2);line-height:1.9;background:var(--paper2);padding:10px;border-radius:5px;margin-bottom:8px">
+        <strong>📋 시도한 경로:</strong><br>
+        ${logs.map(l=>`• ${l}`).join('<br>')}
+      </div>
+      <div style="font-size:12px;color:var(--ink2);line-height:1.8">
+        <strong>✅ 해결 방법:</strong><br>
+        ① <strong>에어비앤비</strong> → 캘린더 → <em>내보내기 → .ics 다운로드</em> → 아래 파일 업로드 사용<br>
+        ② <strong>부킹닷컴</strong> → 계정설정 → iCal 내보내기 → .ics 파일 다운로드<br>
+        ③ <strong>구글캘린더</strong> → 캘린더 설정 → 캘린더 공개 → URL 사용 가능<br>
+        ④ 에어비앤비·부킹닷컴은 보안상 외부 직접 접근 차단 (CORS 정책) — .ics 파일 방식 권장
       </div>`;
     return;
   }
+
   const parsed=parseICS(result.text,src);
   if(!parsed.length){
-    resEl.innerHTML=`<span style="color:var(--amber)">⚠️ 파싱된 이벤트가 없습니다. 올바른 iCal URL인지 확인해주세요.</span>`;
+    resEl.innerHTML=`<span style="color:var(--amber)">⚠️ 파싱된 이벤트가 없습니다. .ics 형식이 맞는지 확인해주세요.<br>
+      <span style="font-size:11px">(가져온 응답 앞 200자: ${result.text.slice(0,200)})</span></span>`;
     return;
   }
   const{added,updated,total}=applyParsed(parsed,src,url);
-  const viaNote=result.via==='proxy'?' (CORS 프록시 경유)':'';
+  const viaNote=result.via==='proxy'?` <span style="color:var(--ink3);font-size:10px">(CORS 프록시 경유)</span>`:'';
   const blocks=parsed.filter(r=>r.icalBlock).length;
   resEl.innerHTML=`✅ <strong>${src}</strong>에서 ${total}건 가져옴${viaNote}<br>
-    <span style="font-size:11px;color:var(--ink3)">신규 ${added}건 추가 · ${updated}건 업데이트${blocks?` · 블록 ${blocks}건`:''}`;
+    <span style="font-size:11px;color:var(--ink3)">신규 ${added}건 추가 · ${updated}건 업데이트${blocks?` · 공실블록 ${blocks}건`:''}`;
   toast(`${added}건 추가 · ${updated}건 업데이트`);
 }
 
@@ -2041,14 +2101,15 @@ function reCopyInvite(idx){
 }
 
 /* ═══════════ TRIAL / PLAN HELPERS ═══════════ */
+const TRIAL_DAYS=30; // 무료 체험 기간 (일)
 function getTrialStatus(){
   const users = JSON.parse(localStorage.getItem('sb_users')||'[]');
   const user  = users.find(u=>u.email===currentUser.email);
-  if(!user) return {status:'trial',daysLeft:7};
+  if(!user) return {status:'trial',daysLeft:TRIAL_DAYS};
   if(user.plan==='monthly'||user.plan==='yearly') return {status:'premium',plan:user.plan};
   const joined   = new Date(user.joinedAt||new Date());
   const diffDays = Math.floor((new Date()-joined)/86400000);
-  const daysLeft = Math.max(0, 7-diffDays);
+  const daysLeft = Math.max(0, TRIAL_DAYS-diffDays);
   return daysLeft>0 ? {status:'trial',daysLeft} : {status:'expired',daysLeft:0};
 }
 
@@ -2061,11 +2122,21 @@ function renderTrialBanner(){
     bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 20px;background:#fdf3dc;border-bottom:1px solid #ffcc80;font-size:12px;font-weight:500;color:#8b6914';
     bar.innerHTML=`<span>👑</span><span>Premium 구독 중입니다. 감사합니다!</span><a href="pricing.html" style="color:#8b6914;text-decoration:underline;font-weight:600">구독 관리</a>`;
   } else if(ts.status==='trial'){
-    const pct=Math.round((7-ts.daysLeft)/7*100);
-    bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 20px;background:#e8f5ee;border-bottom:1px solid #b2dfdb;font-size:12px;font-weight:500;color:#1a6b3c;flex-wrap:wrap';
-    bar.innerHTML=`<span>🎁</span><span>무료 체험 <strong>${ts.daysLeft}일</strong> 남았어요</span>
-      <div style="width:80px;height:5px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#1a6b3c;border-radius:3px"></div></div>
-      <a href="pricing.html" style="color:#1a6b3c;font-weight:700;text-decoration:underline">플랜 보기 →</a>`;
+    const pct=Math.round((TRIAL_DAYS-ts.daysLeft)/TRIAL_DAYS*100);
+    const isWarning=ts.daysLeft<=7; // 7일 이하: amber 경고
+    if(isWarning){
+      // 만료 임박 경고 (7일 이하)
+      bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 20px;background:#fff8e1;border-bottom:2px solid #ffc107;font-size:12px;font-weight:600;color:#7a5c1e;flex-wrap:wrap';
+      bar.innerHTML=`<span>⏰</span><span>무료 체험 <strong>${ts.daysLeft}일</strong> 후 종료 — 지금 구독하면 계속 이용 가능해요!</span>
+        <div style="width:80px;height:5px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#f9a825;border-radius:3px"></div></div>
+        <a href="pricing.html" style="background:#f9a825;color:#3e2800;padding:5px 14px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">플랜 보기 →</a>`;
+    } else {
+      // 일반 trial 배너
+      bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 20px;background:#e8f5ee;border-bottom:1px solid #b2dfdb;font-size:12px;font-weight:500;color:#1a6b3c;flex-wrap:wrap';
+      bar.innerHTML=`<span>🎁</span><span>무료 체험 <strong>${ts.daysLeft}일</strong> 남았어요</span>
+        <div style="width:80px;height:5px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#1a6b3c;border-radius:3px"></div></div>
+        <a href="pricing.html" style="color:#1a6b3c;font-weight:700;text-decoration:underline">플랜 보기 →</a>`;
+    }
   } else {
     bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 20px;background:#fdeaea;border-bottom:1px solid #f48fb1;font-size:12px;font-weight:600;color:#8b1a1a;flex-wrap:wrap';
     bar.innerHTML=`<span>⚠️</span><span>무료 체험이 종료되었습니다. 예약 조회만 가능합니다.</span>
@@ -2353,11 +2424,16 @@ function openMyPage(){
     planBtn.textContent='구독 관리';
     planBtn.style.background='#8b6914';
   } else if(ts.status==='trial'){
-    planBox.style.background='#e8f5ee';
-    planName.innerHTML=`🎁 무료 체험 중 — <strong>${ts.daysLeft}일</strong> 남음`;
-    planDesc.textContent='체험 종료 후 Premium을 구독하면 계속 사용할 수 있어요.';
-    planBtn.textContent='플랜 보기';
-    planBtn.style.background='var(--green)';
+    const isWarn=ts.daysLeft<=7;
+    planBox.style.background=isWarn?'#fff8e1':'#e8f5ee';
+    planName.innerHTML=isWarn
+      ?`⏰ 무료 체험 <strong>${ts.daysLeft}일</strong> 남음 — 곧 종료됩니다`
+      :`🎁 무료 체험 중 — <strong>${ts.daysLeft}일</strong> 남음`;
+    planDesc.textContent=isWarn
+      ?`체험 만료 전에 구독하면 중단 없이 계속 사용 가능! (총 ${TRIAL_DAYS}일 무료)`
+      :`총 ${TRIAL_DAYS}일 무료 체험 중 — 만료 후 Premium 구독으로 이어가세요.`;
+    planBtn.textContent=isWarn?'지금 구독하기 →':'플랜 보기';
+    planBtn.style.background=isWarn?'#f9a825':'';
   } else {
     planBox.style.background='#fdeaea';
     planName.innerHTML='⚠️ 체험 기간 종료';

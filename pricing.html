@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StayBlock — 요금제</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a1a;--ink2:#3d3d3d;--ink3:#888888;
+  --paper:#f5f5f5;--paper2:#ebebeb;--paper3:#dedede;
+  --white:#ffffff;
+  --accent:#2b2b2b;
+  --green:#2d6a4f;--green2:#eaf3ee;
+  --amber:#7a5c1e;--amber2:#fff8e1;
+  --red:#8b2020;--red2:#fdeaea;
+  --border:#d2d2d2;
+  --r:6px;--rl:12px;
+  --sh:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.05);
+  --sh2:0 4px 20px rgba(0,0,0,.12),0 12px 40px rgba(0,0,0,.08);
+}
+body{font-family:'Nanum Gothic',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* HEADER */
+.hd{display:flex;align-items:center;padding:13px 24px;background:var(--ink);color:#fff;gap:12px}
+.logo{font-size:18px;font-weight:800;letter-spacing:-.3px;color:#fff;text-decoration:none}
+.logo span{color:#aaa}
+.betabg{font-size:9px;background:#444;color:#ddd;padding:2px 6px;border-radius:3px;vertical-align:super;margin-left:3px}
+.hd-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-sm{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;border:none;font-family:'Nanum Gothic',sans-serif}
+.btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-wh{background:#fff;color:var(--ink)}
+.btn-wh:hover{background:#e8e8e8}
+
+/* HERO */
+.hero{text-align:center;padding:64px 20px 40px;max-width:720px;margin:0 auto}
+.hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px}
+.hero-title{font-size:36px;font-weight:800;line-height:1.2;margin-bottom:14px;letter-spacing:-.5px}
+.hero-title em{font-style:normal;color:var(--green)}
+.hero-sub{font-size:16px;color:var(--ink2);line-height:1.7;max-width:520px;margin:0 auto 10px}
+.hero-note{font-size:12px;color:var(--ink3);margin-top:8px}
+
+/* TOGGLE */
+.billing-toggle{display:flex;align-items:center;justify-content:center;gap:10px;margin:28px auto 40px;background:var(--white);border:1px solid var(--border);border-radius:100px;padding:5px;width:fit-content;box-shadow:var(--sh)}
+.bill-btn{padding:8px 24px;border-radius:100px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif;background:transparent;color:var(--ink3);transition:all .2s}
+.bill-btn.on{background:var(--ink);color:#fff}
+.save-pill{background:#e8f5ee;color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;white-space:nowrap}
+
+/* PLANS */
+.plans{display:flex;justify-content:center;gap:20px;padding:0 20px 60px;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+.plan{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:30px 26px;width:280px;display:flex;flex-direction:column;gap:0;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;position:relative}
+.plan:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.plan.featured{border-color:var(--ink);border-width:2px}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap;letter-spacing:.04em}
+.plan-name{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.plan-price{font-family:'Nanum Gothic Coding',monospace;font-size:38px;font-weight:700;line-height:1;margin-bottom:4px;color:var(--ink)}
+.plan-price sup{font-size:18px;vertical-align:super}
+.plan-price sub{font-size:14px;color:var(--ink3);font-weight:400}
+.plan-price-note{font-size:11px;color:var(--ink3);margin-bottom:20px;min-height:16px}
+.plan-divider{height:1px;background:var(--border);margin:0 -6px 20px}
+.plan-features{flex:1;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.pf{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink2)}
+.pf-icon{color:var(--green);font-size:13px;flex-shrink:0;margin-top:1px}
+.pf-icon.no{color:var(--ink3)}
+.pf strong{color:var(--ink)}
+.plan-cta{display:block;text-align:center;padding:13px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Nanum Gothic',sans-serif;border:none}
+.cta-primary{background:var(--ink);color:#fff}
+.cta-primary:hover{background:#3a3a3a}
+.cta-outline{background:transparent;border:1.5px solid var(--border);color:var(--ink)}
+.cta-outline:hover{border-color:var(--ink);background:var(--paper2)}
+.cta-green{background:var(--green);color:#fff}
+.cta-green:hover{background:#1f5038}
+
+/* COMPARISON TABLE */
+.comp-wrap{max-width:760px;margin:0 auto 60px;padding:0 20px}
+.comp-title{font-size:20px;font-weight:800;margin-bottom:20px;text-align:center}
+.comp-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh)}
+.comp-table th,.comp-table td{padding:12px 16px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+.comp-table th{background:var(--paper2);font-weight:700;color:var(--ink2)}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table .check{color:var(--green);font-weight:700}
+.comp-table .no{color:var(--ink3)}
+.comp-table .hl{background:#f0f7f4}
+
+/* FAQ */
+.faq-wrap{max-width:680px;margin:0 auto 60px;padding:0 20px}
+.faq-title{font-size:20px;font-weight:800;margin-bottom:20px;text-align:center}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:8px;overflow:hidden}
+.faq-q{padding:16px 20px;font-weight:700;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-q:hover{background:var(--paper2)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;font-size:13px;color:var(--ink2);line-height:1.7;transition:max-height .3s,padding .3s}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:300px}
+.faq-chevron{transition:transform .25s;flex-shrink:0}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+
+/* SOCIAL PROOF */
+.trust-wrap{text-align:center;padding:40px 20px;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:50px}
+.trust-title{font-size:13px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px}
+.trust-items{display:flex;justify-content:center;gap:40px;flex-wrap:wrap}
+.trust-item{font-size:13px;color:var(--ink2)}
+.trust-num{font-family:'Nanum Gothic Coding',monospace;font-size:28px;font-weight:700;color:var(--ink);display:block;margin-bottom:3px}
+
+/* FOOTER */
+.footer{text-align:center;padding:28px 20px;font-size:11px;color:var(--ink3);border-top:1px solid var(--border)}
+.footer a{color:var(--ink3);text-decoration:none}
+.footer a:hover{color:var(--ink)}
+
+/* ALERT BANNER (trial warning from app.html) */
+.warn-banner{background:var(--amber2);border-bottom:2px solid #ffc107;padding:14px 20px;text-align:center;font-size:13px;font-weight:600;color:var(--amber);display:none}
+.warn-banner.show{display:block}
+
+@media(max-width:680px){
+  .hero-title{font-size:26px}
+  .plans{flex-direction:column;align-items:center}
+  .plan{width:100%;max-width:360px}
+}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <a href="index.html" class="logo">StayBlock<span>.io</span><span class="betabg">β</span></a>
+  <nav class="hd-r">
+    <a href="app.html" class="btn-sm btn-ghost">앱으로 돌아가기</a>
+  </nav>
+</header>
+
+<!-- Trial warning banner (shown via JS if needed) -->
+<div id="warnBanner" class="warn-banner"></div>
+
+<section class="hero">
+  <div class="hero-eyebrow">요금제 안내</div>
+  <h1 class="hero-title">소규모 호스트에게 꼭 맞는<br><em>합리적인 가격</em></h1>
+  <p class="hero-sub">에어비앤비·부킹닷컴·네이버예약 모든 채널을 하나로 관리.<br>복잡한 설치 없이, 지금 바로 시작하세요.</p>
+  <p class="hero-note">💳 첫 30일 무료 · 언제든 해지 가능 · 카드 정보 없이 시작</p>
+</section>
+
+<!-- Billing toggle -->
+<div class="billing-toggle">
+  <button class="bill-btn on" id="btn-monthly" onclick="setBilling('monthly')">월간 결제</button>
+  <button class="bill-btn" id="btn-yearly" onclick="setBilling('yearly')">
+    연간 결제 <span class="save-pill">2개월 무료</span>
+  </button>
+</div>
+
+<!-- Plan cards -->
+<div class="plans">
+
+  <!-- Free Trial -->
+  <div class="plan">
+    <div class="plan-name">무료 체험</div>
+    <div class="plan-price">₩<span>0</span></div>
+    <div class="plan-price-note">30일 무료 · 가입 즉시 시작</div>
+    <div class="plan-divider"></div>
+    <div class="plan-features">
+      <div class="pf"><span class="pf-icon">✓</span><span>모든 기능 <strong>30일 무제한</strong></span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>공간 3개 · 예약 무제한</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>iCal 동기화 3채널</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>CSV / PDF 내보내기</span></div>
+      <div class="pf"><span class="pf-icon no">–</span><span style="color:var(--ink3)">슬롯 초대 (체험 후 지원)</span></div>
+    </div>
+    <button class="plan-cta cta-outline" onclick="goToApp()">지금 무료 시작 →</button>
+  </div>
+
+  <!-- Premium -->
+  <div class="plan featured">
+    <div class="plan-badge">가장 인기</div>
+    <div class="plan-name">Premium</div>
+    <div class="plan-price" id="prem-price">₩<span id="prem-amount">6,900</span><sub id="prem-unit">/월</sub></div>
+    <div class="plan-price-note" id="prem-note">월간 결제 · VAT 포함</div>
+    <div class="plan-divider"></div>
+    <div class="plan-features">
+      <div class="pf"><span class="pf-icon">✓</span><span><strong>모든 기능 무제한</strong></span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>공간 최대 <strong>10개</strong></span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>iCal 동기화 <strong>무제한 채널</strong></span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>슬롯 초대 (직원·업체 공유)</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>CSV / PDF 내보내기</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>월별 수익 통계·채널 분석</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>우선 고객 지원</span></div>
+    </div>
+    <button class="plan-cta cta-primary" id="prem-cta" onclick="subscribePremium()">Premium 시작하기 →</button>
+  </div>
+
+  <!-- Team -->
+  <div class="plan">
+    <div class="plan-name">Team</div>
+    <div class="plan-price">₩<span>19,900</span><sub>/월</sub></div>
+    <div class="plan-price-note">연간 ₩199,000 (2개월 무료)</div>
+    <div class="plan-divider"></div>
+    <div class="plan-features">
+      <div class="pf"><span class="pf-icon">✓</span><span>Premium 모든 기능</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>공간 <strong>무제한</strong></span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>팀원 계정 최대 5개</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>다중 숙소 통합 대시보드</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>API 연동 (문의)</span></div>
+      <div class="pf"><span class="pf-icon">✓</span><span>전담 온보딩 지원</span></div>
+    </div>
+    <a href="mailto:theyfeelbetter@gmail.com?subject=StayBlock Team 플랜 문의" class="plan-cta cta-outline">도입 문의하기</a>
+  </div>
+
+</div>
+
+<!-- Social proof -->
+<div class="trust-wrap">
+  <div class="trust-title">StayBlock과 함께하는 호스트들</div>
+  <div class="trust-items">
+    <div class="trust-item"><span class="trust-num">3+</span>지원 채널 (연동)</div>
+    <div class="trust-item"><span class="trust-num">6</span>업종 지원</div>
+    <div class="trust-item"><span class="trust-num">30일</span>무료 체험</div>
+    <div class="trust-item"><span class="trust-num">₩6,900</span>부터 시작</div>
+  </div>
+</div>
+
+<!-- Comparison table -->
+<div class="comp-wrap">
+  <div class="comp-title">플랜 비교</div>
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th style="width:40%">기능</th>
+        <th style="width:20%;text-align:center">무료 체험</th>
+        <th style="width:20%;text-align:center;background:#f0f7f4">Premium</th>
+        <th style="width:20%;text-align:center">Team</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>공간(객실) 수</td><td style="text-align:center">3개</td><td style="text-align:center" class="hl"><strong>10개</strong></td><td style="text-align:center">무제한</td></tr>
+      <tr><td>예약 등록</td><td style="text-align:center" class="check">✓</td><td style="text-align:center;background:#f0f7f4" class="check">✓</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>타임라인 · 월간 · 연간 캘린더</td><td style="text-align:center" class="check">✓</td><td style="text-align:center;background:#f0f7f4" class="check">✓</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>iCal 동기화 채널 수</td><td style="text-align:center">3채널</td><td style="text-align:center" class="hl"><strong>무제한</strong></td><td style="text-align:center"><strong>무제한</strong></td></tr>
+      <tr><td>CSV · PDF 내보내기</td><td style="text-align:center" class="check">✓</td><td style="text-align:center;background:#f0f7f4" class="check">✓</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>슬롯 초대 (청소·체크인 공유)</td><td style="text-align:center" class="no">–</td><td style="text-align:center;background:#f0f7f4" class="check">✓</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>채널별 수익 통계</td><td style="text-align:center" class="no">–</td><td style="text-align:center;background:#f0f7f4" class="check">✓</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>팀원 계정</td><td style="text-align:center" class="no">–</td><td style="text-align:center;background:#f0f7f4" class="no">–</td><td style="text-align:center" class="check"><strong>5명</strong></td></tr>
+      <tr><td>다중 숙소 대시보드</td><td style="text-align:center" class="no">–</td><td style="text-align:center;background:#f0f7f4" class="no">–</td><td style="text-align:center" class="check">✓</td></tr>
+      <tr><td>가격 (월)</td><td style="text-align:center"><strong>₩0</strong></td><td style="text-align:center;background:#f0f7f4"><strong>₩6,900~</strong></td><td style="text-align:center"><strong>₩19,900~</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FAQ -->
+<div class="faq-wrap">
+  <div class="faq-title">자주 묻는 질문</div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">30일 무료 체험 후 자동으로 결제되나요? <span class="faq-chevron">▾</span></div>
+    <div class="faq-a">아니요. 체험 기간 종료 후 자동 결제되지 않습니다. 계속 사용하려면 직접 구독을 선택해주세요. 체험 종료 후에는 예약 조회만 가능하고 새 예약 추가·수정이 제한됩니다.</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">체험 기간 중 저장한 예약 데이터는 유지되나요? <span class="faq-chevron">▾</span></div>
+    <div class="faq-a">네, 체험 종료 후에도 기존 예약 데이터는 그대로 유지됩니다. Premium 구독 후 바로 이어서 사용하실 수 있습니다. (단, 현재 베타 버전은 브라우저 localStorage에 저장됩니다. 같은 브라우저에서 사용해주세요.)</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">에어비앤비·부킹닷컴 캘린더를 자동으로 가져올 수 있나요? <span class="faq-chevron">▾</span></div>
+    <div class="faq-a">iCal URL을 입력하거나 .ics 파일을 업로드하면 예약이 자동 등록됩니다. 에어비앤비와 부킹닷컴은 보안 정책상 URL 직접 연동이 제한될 수 있어, .ics 파일 다운로드 후 업로드 방식을 권장합니다. 구글 캘린더는 URL 직접 연동이 가능합니다.</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">언제든지 해지할 수 있나요? <span class="faq-chevron">▾</span></div>
+    <div class="faq-a">네, 언제든지 해지 가능합니다. 연간 플랜은 남은 기간에 대한 환불 정책을 별도 안내드립니다. 해지 문의: theyfeelbetter@gmail.com</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">Team 플랜은 어떤 경우에 필요한가요? <span class="faq-chevron">▾</span></div>
+    <div class="faq-a">여러 숙소를 운영하거나 직원과 함께 예약을 관리해야 하는 경우, 또는 채널매니저·PMS와 API 연동이 필요한 경우에 적합합니다. 도입 상담은 이메일로 문의해주세요.</div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>StayBlock · 소규모 숙박·공간 운영자를 위한 예약 관리 서비스</p>
+  <p style="margin-top:6px"><a href="index.html">홈</a> · <a href="app.html">앱</a> · <a href="mailto:theyfeelbetter@gmail.com">문의</a></p>
+  <p style="margin-top:6px">© 2025 StayBlock. All rights reserved.</p>
+</footer>
+
+<script>
+/* ── Stripe Payment Links (실제 URL로 교체 필요) ── */
+const STRIPE_LINKS={
+  monthly:'https://buy.stripe.com/PLACEHOLDER_MONTHLY',
+  yearly:'https://buy.stripe.com/PLACEHOLDER_YEARLY',
+};
+
+let billingCycle='monthly';
+
+function setBilling(cycle){
+  billingCycle=cycle;
+  document.getElementById('btn-monthly').classList.toggle('on',cycle==='monthly');
+  document.getElementById('btn-yearly').classList.toggle('on',cycle==='yearly');
+  const amountEl=document.getElementById('prem-amount');
+  const unitEl=document.getElementById('prem-unit');
+  const noteEl=document.getElementById('prem-note');
+  if(cycle==='yearly'){
+    amountEl.textContent='5,750';
+    unitEl.textContent='/월';
+    noteEl.textContent='연간 ₩69,000 결제 (₩13,800 절약 · 2개월 무료 효과)';
+  } else {
+    amountEl.textContent='6,900';
+    unitEl.textContent='/월';
+    noteEl.textContent='월간 결제 · VAT 포함';
+  }
+}
+
+function subscribePremium(){
+  const url=STRIPE_LINKS[billingCycle];
+  if(url.includes('PLACEHOLDER')){
+    alert('결제 시스템 준비 중입니다.\n문의: theyfeelbetter@gmail.com');
+    return;
+  }
+  window.location.href=url;
+}
+
+function goToApp(){
+  window.location.href='app.html';
+}
+
+function toggleFaq(el){
+  el.classList.toggle('open');
+}
+
+/* ── Trial 만료 경고 배너 (app.html에서 넘어온 경우) ── */
+(function(){
+  try{
+    const session=JSON.parse(localStorage.getItem('sb_session')||'null');
+    if(!session) return;
+    const users=JSON.parse(localStorage.getItem('sb_users')||'[]');
+    const user=users.find(u=>u.email===session.email);
+    if(!user||user.plan==='monthly'||user.plan==='yearly') return;
+    const diffDays=Math.floor((new Date()-new Date(user.joinedAt||new Date()))/86400000);
+    const daysLeft=Math.max(0,30-diffDays);
+    if(daysLeft<=7&&daysLeft>0){
+      const b=document.getElementById('warnBanner');
+      b.innerHTML=`⏰ 무료 체험이 <strong>${daysLeft}일</strong> 후 종료됩니다. 지금 구독하면 예약 데이터를 그대로 이어서 사용할 수 있어요!`;
+      b.classList.add('show');
+    } else if(daysLeft===0){
+      const b=document.getElementById('warnBanner');
+      b.innerHTML='⚠️ 무료 체험이 종료되었습니다. Premium을 구독하면 모든 기능이 복구됩니다.';
+      b.style.background='#fdeaea';b.style.borderColor='#f48fb1';b.style.color='#8b2020';
+      b.classList.add('show');
+    }
+  }catch(e){}
+})();
+
+/* ── URL 파라미터로 결제 완료 처리 ── */
+(function(){
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('paid')==='1'&&(p.get('plan')==='monthly'||p.get('plan')==='yearly')){
+    try{
+      const session=JSON.parse(localStorage.getItem('sb_session')||'null');
+      if(session){
+        const users=JSON.parse(localStorage.getItem('sb_users')||'[]');
+        const user=users.find(u=>u.email===session.email);
+        if(user){
+          user.plan=p.get('plan');
+          user.planStart=new Date().toISOString();
+          localStorage.setItem('sb_users',JSON.stringify(users));
+          alert('🎉 Premium 구독이 활성화되었습니다! 감사합니다.');
+          window.location.href='app.html';
+        }
+      }
+    }catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
