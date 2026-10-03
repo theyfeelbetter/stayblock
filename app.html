@@ -748,9 +748,9 @@ textarea{resize:vertical;min-height:56px}
         <button onclick="fetchIcal()">가져오기</button>
       </div>
       <div class="samp-btns">
-        <button class="samp-btn" onclick="setSample('airbnb')">🏠 에어비앤비 샘플</button>
-        <button class="samp-btn" onclick="setSample('booking')">🌐 부킹닷컴 샘플</button>
-        <button class="samp-btn" onclick="setSample('naver')">🟢 네이버 샘플</button>
+        <button class="samp-btn" onclick="loadSample('airbnb')">🏠 에어비앤비 샘플</button>
+        <button class="samp-btn" onclick="loadSample('booking')">🌐 부킹닷컴 샘플</button>
+        <button class="samp-btn" onclick="loadSample('naver')">🟢 네이버 샘플</button>
       </div>
       <div class="ical-zone" id="icalZone" ondragover="icalDrag(event,true)" ondragleave="icalDrag(event,false)" ondrop="icalDrop(event)">
         <div style="font-size:28px;margin-bottom:5px">📅</div>
@@ -1605,38 +1605,170 @@ function openIcalMo(){
   }
   document.getElementById('moIcal').classList.add('open');
 }
-function setSample(t){const m={airbnb:'https://www.airbnb.com/calendar/ical/12345678.ics?s=sample',booking:'https://admin.booking.com/hotel/hoteladmin/ical.html?hotel_id=12345',naver:'https://booking.naver.com/ical/lodging/123456.ics'};document.getElementById('ical-url').value=m[t];}
-function parseICS(text,src){
-  const evs=[];const blocks=text.split('BEGIN:VEVENT');
+
+/* ─── iCal 파싱 (실제 VEVENT 파싱) ─── */
+function parseICS(text,src,targetRoom){
+  const evs=[];
+  // 멀티라인 접기(RFC5545 line folding) 처리
+  const unfolded=text.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+  const blocks=unfolded.split(/BEGIN:VEVENT/i);
   blocks.slice(1).forEach(b=>{
-    const get=k=>{const m=b.match(new RegExp(k+'[^:]*:([^\r\n]+)'));return m?m[1].trim():'';};
-    const dtS=get('DTSTART'),dtE=get('DTEND'),sum=get('SUMMARY'),uid=get('UID');if(!dtS||!dtE)return;
-    const pd=s=>{const d=s.replace(/T\d+Z?$/,'');return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;};
-    evs.push({id:nextId++,name:sum||src+' 예약',nameEn:sum||'',room:industry.rooms[0],status:'confirmed',cin:pd(dtS),cout:pd(dtE),cinT:'',coutT:'',guests:1,country:'',channel:src,amount:0,memo:`iCal: ${uid.slice(0,20)}`,color:'sky',sticker:'📅',icalUid:uid});
+    // 속성값 파싱 (파라미터 포함: DTSTART;VALUE=DATE:...)
+    const get=k=>{
+      const m=b.match(new RegExp(k+'(?:;[^:]*)?:([^\r\n]+)','i'));
+      return m?m[1].trim():'';
+    };
+    const dtS=get('DTSTART'),dtE=get('DTEND'),sum=get('SUMMARY'),uid=get('UID'),desc=get('DESCRIPTION');
+    if(!dtS||!dtE||!uid) return;
+    // 날짜 파싱: DATE (YYYYMMDD) or DATETIME (YYYYMMDDTHHmmssZ)
+    const pd=s=>{
+      const d=s.replace(/T\d{6}Z?$/,'');
+      if(d.length===8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+      return d; // 이미 YYYY-MM-DD 형식
+    };
+    const cin=pd(dtS),cout=pd(dtE);
+    if(!cin||!cout||cin>=cout) return;
+
+    // 에어비앤비 블록 이벤트 판별
+    // SUMMARY: "Airbnb (Not available)", "Reserved", "Blocked" 등
+    const sumL=(sum||'').toLowerCase();
+    const isBlock=sumL.includes('not available')||sumL.includes('blocked')||sumL==='reserved'||sumL.includes('unavailable');
+
+    // 게스트명 추출 (에어비앤비는 DESCRIPTION에 "Guest: 이름" 형태로 포함하기도 함)
+    let guestName=sum||src+' 예약';
+    if(isBlock) guestName=`[블록] ${src}`;
+    else if(desc){
+      const dm=desc.match(/Guest[:\s]+([^\n,]+)/i);
+      if(dm) guestName=dm[1].trim();
+    }
+    // 국가 추출 시도 (에어비앤비 description에 포함 가능)
+    let country='';
+    if(desc){const cm=desc.match(/([A-Z]{2})\s*$/m);if(cm)country=cm[1];}
+
+    evs.push({
+      id:nextId++,
+      name:guestName,
+      nameEn:guestName,
+      room:targetRoom||industry.rooms[0],
+      status:isBlock?'confirmed':'confirmed',
+      cin,cout,
+      cinT:'',coutT:'',
+      guests:1,country,
+      channel:src,
+      amount:0,
+      memo:`iCal 동기화: ${uid.slice(0,30)}`,
+      color:isBlock?'slate':'sky',
+      sticker:isBlock?'🔒':'📅',
+      icalUid:uid,
+      icalBlock:isBlock
+    });
   });
   return evs;
 }
+
+/* ─── CORS 프록시를 통한 실제 URL fetch ─── */
+const CORS_PROXIES=[
+  u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+];
+async function fetchIcsText(url){
+  // 1차: 직접 fetch 시도
+  try{
+    const r=await fetch(url,{mode:'cors',cache:'no-store'});
+    if(r.ok){const t=await r.text();if(t.includes('VCALENDAR'))return{text:t,via:'direct'};}
+  }catch(e){}
+  // 2차: CORS 프록시 순차 시도
+  for(const mkProxy of CORS_PROXIES){
+    try{
+      const r=await fetch(mkProxy(url),{cache:'no-store'});
+      if(!r.ok) continue;
+      const json=await r.json().catch(()=>null);
+      const text=json?(json.contents||json.body||''):await r.text();
+      if(text.includes('VCALENDAR'))return{text,via:'proxy'};
+    }catch(e){}
+  }
+  return null;
+}
+
+function applyParsed(parsed,src,url){
+  const existing=new Set(reservations.map(r=>r.icalUid).filter(Boolean));
+  // 기존 ical 예약 중 같은 URL 피드의 것은 UID 비교해 삭제된 것 제거
+  const thisFeedUids=new Set(parsed.map(r=>r.icalUid));
+  reservations=reservations.filter(r=>!(r.icalUid&&r.channel===src&&!thisFeedUids.has(r.icalUid)));
+  // 신규 추가 / 기존 업데이트
+  let added=0,updated=0;
+  parsed.forEach(r=>{
+    const ex=reservations.find(e=>e.icalUid===r.icalUid);
+    if(ex){Object.assign(ex,{cin:r.cin,cout:r.cout,name:r.name,icalBlock:r.icalBlock,color:r.color,sticker:r.sticker});updated++;}
+    else{reservations.push(r);added++;}
+  });
+  save();renderAll();
+  if(!icalFeeds.find(f=>f.url===url)){icalFeeds.push({name:src,url,lastSync:new Date().toISOString()});save();}
+  else{const f=icalFeeds.find(f=>f.url===url);if(f)f.lastSync=new Date().toISOString();save();}
+  renderIcalList();
+  return{added,updated,total:parsed.length};
+}
+
+function srcLabel(url){
+  if(url.includes('airbnb'))return'에어비앤비';
+  if(url.includes('booking'))return'부킹닷컴';
+  if(url.includes('naver'))return'네이버예약';
+  if(url.includes('google'))return'구글캘린더';
+  if(url.includes('agoda'))return'아고다';
+  return'외부 iCal';
+}
+
+async function fetchIcal(){
+  const url=document.getElementById('ical-url').value.trim();
+  if(!url){alert('URL을 입력해주세요');return;}
+  const resEl=document.getElementById('icalRes');
+  resEl.classList.add('show');
+  resEl.innerHTML='<span style="color:var(--ink3)">⏳ 외부 캘린더 가져오는 중...</span>';
+  const src=srcLabel(url);
+  const result=await fetchIcsText(url);
+  if(!result){
+    // fetch 실패 시 사용자에게 방법 안내
+    resEl.innerHTML=`<div style="color:var(--red);font-weight:700;margin-bottom:6px">⚠️ URL에서 직접 가져올 수 없습니다</div>
+      <div style="font-size:11px;color:var(--ink2);line-height:1.7">
+        <strong>해결 방법:</strong><br>
+        ① 에어비앤비 → <em>캘린더 → 내보내기 → .ics 다운로드</em> 후 아래 파일 업로드<br>
+        ② 구글 캘린더는 공개 설정 후 URL 사용 가능<br>
+        ③ 일부 채널은 CORS 정책으로 브라우저 직접 접근 불가
+      </div>`;
+    return;
+  }
+  const parsed=parseICS(result.text,src);
+  if(!parsed.length){
+    resEl.innerHTML=`<span style="color:var(--amber)">⚠️ 파싱된 이벤트가 없습니다. 올바른 iCal URL인지 확인해주세요.</span>`;
+    return;
+  }
+  const{added,updated,total}=applyParsed(parsed,src,url);
+  const viaNote=result.via==='proxy'?' (CORS 프록시 경유)':'';
+  const blocks=parsed.filter(r=>r.icalBlock).length;
+  resEl.innerHTML=`✅ <strong>${src}</strong>에서 ${total}건 가져옴${viaNote}<br>
+    <span style="font-size:11px;color:var(--ink3)">신규 ${added}건 추가 · ${updated}건 업데이트${blocks?` · 블록 ${blocks}건`:''}`;
+  toast(`${added}건 추가 · ${updated}건 업데이트`);
+}
+
+/* ─── 샘플 데이터 (버튼용) ─── */
 function mkSampleICS(src){
   const y=new Date().getFullYear(),m=new Date().getMonth();
   const d2s=d=>{const dt=new Date(y,m,d);return `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}`;};
-  return `BEGIN:VCALENDAR\nVERSION:2.0\n`+
-    `BEGIN:VEVENT\nUID:${src}-001-${Date.now()}@sb\nDTSTART;VALUE=DATE:${d2s(5)}\nDTEND;VALUE=DATE:${d2s(7)}\nSUMMARY:${src} Guest A\nEND:VEVENT\n`+
-    `BEGIN:VEVENT\nUID:${src}-002-${Date.now()}@sb\nDTSTART;VALUE=DATE:${d2s(16)}\nDTEND;VALUE=DATE:${d2s(19)}\nSUMMARY:${src} Guest B\nEND:VEVENT\n`+
+  const uid=()=>`${src}-${Date.now()}-${Math.random().toString(36).slice(2,7)}@stayblock`;
+  return `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//StayBlock//Sample//KO\r\n`+
+    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(3)}\r\nDTEND;VALUE=DATE:${d2s(6)}\r\nSUMMARY:${src} Guest A\r\nDESCRIPTION:Guest: Sample Guest A\r\nEND:VEVENT\r\n`+
+    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(12)}\r\nDTEND;VALUE=DATE:${d2s(14)}\r\nSUMMARY:Airbnb (Not available)\r\nDESCRIPTION:Blocked dates\r\nEND:VEVENT\r\n`+
+    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(20)}\r\nDTEND;VALUE=DATE:${d2s(24)}\r\nSUMMARY:${src} Guest B\r\nDESCRIPTION:Guest: Sample Guest B\r\nEND:VEVENT\r\n`+
     `END:VCALENDAR`;
 }
-function fetchIcal(){
-  const url=document.getElementById('ical-url').value.trim();if(!url){alert('URL을 입력해주세요');return;}
-  const resEl=document.getElementById('icalRes');resEl.classList.add('show');resEl.textContent='⏳ 파싱 중...';
-  setTimeout(()=>{
-    const src=url.includes('airbnb')?'에어비앤비':url.includes('booking')?'부킹닷컴':url.includes('naver')?'네이버예약':'iCal';
-    const parsed=parseICS(mkSampleICS(src),src);
-    const existing=new Set(reservations.map(r=>r.icalUid).filter(Boolean));
-    const newR=parsed.filter(r=>!existing.has(r.icalUid));
-    reservations.push(...newR);save();renderAll();
-    resEl.textContent=`✅ ${src}에서 ${newR.length}건 추가 (중복 ${parsed.length-newR.length}건 제외)`;
-    if(!icalFeeds.find(f=>f.url===url)){icalFeeds.push({name:src,url});save();renderIcalList();}
-    toast(`${newR.length}건 동기화 완료`);
-  },700);
+function loadSample(t){
+  const src={airbnb:'에어비앤비',booking:'부킹닷컴',naver:'네이버예약'}[t]||t;
+  const parsed=parseICS(mkSampleICS(src),src);
+  const{added,updated,total}=applyParsed(parsed,src,`sample://${t}`);
+  const resEl=document.getElementById('icalRes');resEl.classList.add('show');
+  const blocks=parsed.filter(r=>r.icalBlock).length;
+  resEl.innerHTML=`✅ <strong>${src} 샘플</strong> ${total}건 로드<br><span style="font-size:11px;color:var(--ink3)">신규 ${added}건 · 업데이트 ${updated}건${blocks?` · 블록 ${blocks}건`:''}`;
+  toast(`샘플 ${added}건 추가`);
 }
 function icalFileRead(inp){
   const file=inp.files[0];if(!file)return;
@@ -1657,10 +1789,29 @@ document.getElementById('icalZone').addEventListener('click',()=>document.getEle
 function renderIcalList(){
   const el=document.getElementById('icalSL');
   if(!icalFeeds.length){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">저장된 피드</div>`+
-    icalFeeds.map((f,i)=>`<div class="ical-si"><span class="ical-sn">${f.name}</span><span class="ical-su" title="${f.url}">${f.url}</span><button class="ical-xbtn" onclick="delFeed(${i})">✕</button></div>`).join('');
+  const fmtSync=iso=>{if(!iso)return'';const d=new Date(iso);return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">연동된 캘린더</div>`+
+    icalFeeds.map((f,i)=>`<div class="ical-si">
+      <span class="ical-sn">${f.name}</span>
+      <span class="ical-su" title="${f.url}">${f.url}</span>
+      ${f.lastSync?`<span style="font-size:9px;color:var(--ink3);white-space:nowrap">${fmtSync(f.lastSync)}</span>`:''}
+      <button onclick="resyncFeed(${i})" title="재동기화" style="background:none;border:1px solid var(--border);border-radius:3px;padding:2px 6px;cursor:pointer;font-size:10px;color:var(--ink3);white-space:nowrap" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink3)'">↺</button>
+      <button class="ical-xbtn" onclick="delFeed(${i})">✕</button>
+    </div>`).join('');
 }
 function delFeed(i){icalFeeds.splice(i,1);save();renderIcalList();}
+async function resyncFeed(i){
+  const f=icalFeeds[i];if(!f)return;
+  if(f.url.startsWith('sample://'))return toast('샘플 피드는 재동기화 불필요');
+  const resEl=document.getElementById('icalRes');resEl.classList.add('show');
+  resEl.innerHTML=`<span style="color:var(--ink3)">⏳ ${f.name} 재동기화 중...</span>`;
+  const result=await fetchIcsText(f.url);
+  if(!result){resEl.innerHTML=`<span style="color:var(--red)">⚠️ ${f.name} 접속 실패 — URL 또는 네트워크 확인 필요</span>`;return;}
+  const parsed=parseICS(result.text,f.name);
+  const{added,updated,total}=applyParsed(parsed,f.name,f.url);
+  resEl.innerHTML=`✅ <strong>${f.name}</strong> 재동기화 완료 — 신규 ${added}건 · 업데이트 ${updated}건`;
+  toast(`${f.name} 재동기화 완료`);
+}
 
 /* ═══════════ EXPORT CSV ═══════════ */
 function exportCSV(){
