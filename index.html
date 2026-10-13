@@ -733,7 +733,6 @@ footer{
   <div class="nav-r">
     <span class="nav-link" onclick="scrollTo({top:document.querySelector('.features-section').offsetTop-80,behavior:'smooth'})">이용방법</span>
     <button class="btn-login" onclick="openAuth('login')">로그인</button>
-    <button class="btn-signup" onclick="openAuth('signup')">무료로 시작하기</button>
   </div>
 </nav>
 
@@ -743,10 +742,9 @@ footer{
   <h1 class="hero-title">예약을 블록처럼<br><em>쌓아보세요</em></h1>
   <p class="hero-sub">에어비앤비·부킹닷컴·네이버부터 직접예약까지<br><strong>모든 채널의 예약을 한 캘린더</strong>에서 관리하세요.</p>
   <div class="hero-cta">
-    <button class="cta-main" onclick="openAuth('signup')">무료로 시작하기 →</button>
+    <button class="cta-main" onclick="openAuth('login')">로그인하기 →</button>
     <button class="cta-sub" onclick="openDemo()">데모 보기</button>
   </div>
-  <p class="hero-note"><span>✓ 무료 베타</span> &nbsp;·&nbsp; 신용카드 불필요 &nbsp;·&nbsp; 설치 없이 바로 시작</p>
   <div class="proof">
     <div class="proof-item"><span>🏠</span>숙박·게스트하우스</div><div class="proof-divider"></div>
     <div class="proof-item"><span>🏢</span>공간 렌탈</div><div class="proof-divider"></div>
@@ -968,12 +966,11 @@ footer{
 <!-- CTA BOTTOM -->
 <div class="cta-bottom">
   <h2 class="cta-bottom-title">지금 바로<br>시작해보세요</h2>
-  <p class="cta-bottom-sub">무료 베타 기간 동안 모든 기능을 제한 없이 이용하세요.</p>
+  <p class="cta-bottom-sub">StayBlock으로 모든 채널의 예약을 한 곳에서 관리하세요.</p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <button class="cta-main" onclick="openAuth('signup')" style="font-size:16px;padding:16px 44px">무료로 시작하기 →</button>
+    <button class="cta-main" onclick="openAuth('login')" style="font-size:16px;padding:16px 44px">로그인하기 →</button>
     <button class="cta-sub" onclick="openDemo()" style="font-size:15px;padding:15px 28px">데모 보기</button>
   </div>
-  <p style="margin-top:16px;font-size:12px;color:var(--tx3)">✓ 무료 베타 &nbsp;·&nbsp; 설치 불필요 &nbsp;·&nbsp; 언제든 탈퇴 가능</p>
 </div>
 
 <!-- FOOTER -->
@@ -1009,10 +1006,9 @@ footer{
       <div id="demoMO" style="display:none;flex:1;overflow:auto"><div class="demo-month-wrap"><table class="demo-mcal" id="demoMCal"></table></div></div>
     </div>
     <div class="demo-cta-bar">
-      <div class="demo-cta-msg"><strong>마음에 드셨나요?</strong> 가입하면 바로 내 예약을 등록할 수 있어요.</div>
+      <div class="demo-cta-msg"><strong>마음에 드셨나요?</strong> 로그인하면 바로 내 예약을 등록할 수 있어요.</div>
       <div style="display:flex;gap:8px">
-        <button class="btn-login" style="font-size:12px;padding:7px 14px" onclick="closeDemo();openAuth('login')">로그인</button>
-        <button class="btn-signup" style="font-size:12px;padding:7px 14px" onclick="closeDemo();openAuth('signup')">무료 가입하기</button>
+        <button class="btn-signup" style="font-size:12px;padding:7px 14px" onclick="closeDemo();openAuth('login')">로그인하기</button>
       </div>
     </div>
   </div>
@@ -1023,10 +1019,7 @@ footer{
   <div class="auth-modal">
     <div class="auth-hd">
       <div class="auth-logo">Stay<span>Block</span></div>
-      <div class="auth-tab-wrap">
-        <button class="auth-tab on" id="tab-login" onclick="switchTab('login')">로그인</button>
-        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">회원가입</button>
-      </div>
+      <p style="font-size:13px;color:var(--tx3);margin-top:10px">계정으로 로그인하세요</p>
     </div>
     <div class="auth-body">
       <div id="form-login">
@@ -1036,18 +1029,7 @@ footer{
           <div class="auth-err" id="l-err"></div>
           <button class="btn-auth" onclick="doLogin()">로그인</button>
         </div>
-        <p class="auth-switch">계정이 없으신가요? <a onclick="switchTab('signup')">회원가입</a></p>
-      </div>
-      <div id="form-signup" style="display:none">
-        <div class="auth-form">
-          <div class="afield"><label>이름</label><input type="text" id="s-name" placeholder="이름을 입력해주세요"></div>
-          <div class="afield"><label>이메일</label><input type="email" id="s-email" placeholder="your@email.com"></div>
-          <div class="afield"><label>비밀번호</label><input type="password" id="s-pw" placeholder="8자 이상"></div>
-          <div class="auth-err" id="s-err"></div>
-          <button class="btn-auth" onclick="doSignup()">무료로 시작하기</button>
-        </div>
-        <p class="auth-switch">이미 계정이 있으신가요? <a onclick="switchTab('login')">로그인</a></p>
-        <p class="auth-footer-link">가입 시 <a>이용약관</a> 및 <a>개인정보처리방침</a>에 동의합니다</p>
+        <p class="auth-footer-link" style="margin-top:16px">문의: <a href="mailto:theyfeelbetter@gmail.com">theyfeelbetter@gmail.com</a></p>
       </div>
     </div>
   </div>
@@ -1284,14 +1266,8 @@ function renderDemoMonth(){
 }
 
 /* ── AUTH ── */
-function openAuth(tab){switchTab(tab);document.getElementById('authMo').classList.add('open');}
+function openAuth(){document.getElementById('authMo').classList.add('open');setTimeout(()=>document.getElementById('l-email').focus(),100);}
 function closeAuth(){document.getElementById('authMo').classList.remove('open');}
-function switchTab(tab){
-  document.getElementById('form-login').style.display=tab==='login'?'':'none';
-  document.getElementById('form-signup').style.display=tab==='signup'?'':'none';
-  document.getElementById('tab-login').classList.toggle('on',tab==='login');
-  document.getElementById('tab-signup').classList.toggle('on',tab==='signup');
-}
 function doLogin(){
   const email=document.getElementById('l-email').value.trim();
   const pw=document.getElementById('l-pw').value;
@@ -1305,27 +1281,8 @@ function doLogin(){
   showToast('로그인 완료! 앱으로 이동합니다...');
   setTimeout(()=>window.location.href='app.html',1000);
 }
-function doSignup(){
-  const name=document.getElementById('s-name').value.trim();
-  const email=document.getElementById('s-email').value.trim();
-  const pw=document.getElementById('s-pw').value;
-  const err=document.getElementById('s-err');
-  if(!name||!email||!pw){err.classList.add('show');err.textContent='모든 항목을 입력해주세요';return;}
-  if(pw.length<8){err.classList.add('show');err.textContent='비밀번호는 8자 이상이어야 합니다';return;}
-  if(!/\S+@\S+\.\S+/.test(email)){err.classList.add('show');err.textContent='올바른 이메일 주소를 입력해주세요';return;}
-  const users=JSON.parse(localStorage.getItem('sb_users')||'[]');
-  if(users.find(u=>u.email===email)){err.classList.add('show');err.textContent='이미 사용 중인 이메일입니다';return;}
-  users.push({name,email,pw,joinedAt:new Date().toISOString()});
-  localStorage.setItem('sb_users',JSON.stringify(users));
-  localStorage.setItem('sb_session',JSON.stringify({name,email}));
-  showToast('🎉 가입 완료! 앱으로 이동합니다...');
-  setTimeout(()=>window.location.href='app.html',1000);
-}
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('authMo').classList.contains('open')){
-    const tab=document.getElementById('tab-login').classList.contains('on')?'login':'signup';
-    if(tab==='login')doLogin();else doSignup();
-  }
+  if(e.key==='Enter'&&document.getElementById('authMo').classList.contains('open')) doLogin();
 });
 function showToast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
