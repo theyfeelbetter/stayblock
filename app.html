@@ -381,7 +381,7 @@ textarea{resize:vertical;min-height:56px}
 
 /* PRINT */
 @media print{
-  .hd,.sidebar,.calhd,.dpanel,.moverlay,.toast,#trialBanner{display:none!important}
+  .hd,.sidebar,.calhd,.dpanel,.moverlay,.toast,#freeBanner{display:none!important}
   .layout{display:block;height:auto}
   .main{overflow:visible}
   #pra{display:block!important}
@@ -504,7 +504,7 @@ textarea{resize:vertical;min-height:56px}
         <button class="expi" onclick="exportCSV()">📄 CSV 다운로드</button>
         <button class="expi" onclick="exportPDF()">🖨️ 월별 정산서 PDF</button>
         <div class="expsep"></div>
-        <button class="expi" onclick="openIcalMo()">📅 iCal 동기화</button>
+        <button class="expi" onclick="openIcalMo()">📅 iCal 수동 가져오기</button>
       </div>
     </div>
     <button class="btn-g" onclick="switchSTab('stats',document.querySelectorAll('.stab')[1])">통계</button>
@@ -530,13 +530,13 @@ textarea{resize:vertical;min-height:56px}
 <!-- VIA MODE BAR -->
 <div class="via-mode-bar" id="viaModeBar">
   <div class="via-mode-dot"></div>
-  <span>Orient VIA — 공실 연동 모드</span>
-  <span class="via-badge">iCal 쌍방향</span>
+  <span>Orient VIA — 숙소 정보 (연동 미제공)</span>
+  <span class="via-badge">자동 동기화 미제공</span>
   <span id="viaPropCount" style="margin-left:4px;font-weight:400;font-size:11px;opacity:.7"></span>
   <button onclick="toggleViaMode()" style="margin-left:auto;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:4px 10px;border-radius:3px;font-size:11px;cursor:pointer;font-family:'Nanum Gothic',sans-serif">일반 모드로</button>
 </div>
-<!-- TRIAL BANNER -->
-<div id="trialBanner" style="display:none"></div>
+<!-- HOST FREE BANNER -->
+<div id="freeBanner" style="display:none"></div>
 
 <div class="layout">
   <aside class="sidebar">
@@ -601,17 +601,17 @@ textarea{resize:vertical;min-height:56px}
     <!-- VIA 동기화 로그 뷰 -->
     <div id="view-sync" style="display:none;flex:1;overflow-y:auto;padding:16px 20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <h3 style="font-size:15px;font-weight:800">iCal 동기화 로그 (A09)</h3>
-        <button onclick="runSyncAll()" style="padding:6px 14px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif">▶ 전체 동기화</button>
+        <h3 style="font-size:15px;font-weight:800">iCal 제공 상태</h3>
+        <button disabled title="전체 자동 동기화는 아직 제공되지 않습니다" style="padding:6px 14px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif">전체 자동 동기화 · 미제공</button>
       </div>
       <!-- 외부 iCal 가져오기 (sync-in) -->
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:12px">
-        <div style="background:var(--paper2);padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)">📥 Sync-IN (외부 → StayBlock, 15분마다)</div>
+        <div style="background:var(--paper2);padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)">📥 Sync-IN (개별 수동 가져오기)</div>
         <div id="syncInLog"></div>
       </div>
       <!-- export-ical (sync-out) -->
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
-        <div style="background:var(--paper2);padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)">📤 Export-ICAL (StayBlock → 외부, 숙소별 공개 URL)</div>
+        <div style="background:var(--paper2);padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)">📤 Export-ICAL (미제공)</div>
         <div id="syncOutLog"></div>
       </div>
     </div>
@@ -756,7 +756,7 @@ textarea{resize:vertical;min-height:56px}
       <!-- 탭 -->
       <div style="display:flex;border-bottom:1px solid var(--border);margin:0 -20px;padding:0 20px;gap:0;margin-bottom:16px">
         <button class="ical-tab on" id="itab-file" onclick="switchIcalTab('file',this)">📁 파일 업로드 <span style="font-size:10px;background:#e8f5ee;color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">권장</span></button>
-        <button class="ical-tab" id="itab-url" onclick="switchIcalTab('url',this)">🔗 URL 연동 <span style="font-size:10px;color:var(--ink3)">(구글만 지원)</span></button>
+        <button class="ical-tab" id="itab-url" onclick="switchIcalTab('url',this)">🔗 URL 연동 <span style="font-size:10px;color:var(--ink3)">(연결 확인 필요)</span></button>
         <button class="ical-tab" id="itab-sample" onclick="switchIcalTab('sample',this)">🧪 샘플 테스트</button>
       </div>
 
@@ -770,7 +770,7 @@ textarea{resize:vertical;min-height:56px}
         <div class="ical-zone" id="icalZone" ondragover="icalDrag(event,true)" ondragleave="icalDrag(event,false)" ondrop="icalDrop(event)" onclick="document.getElementById('icalFile').click()" style="cursor:pointer">
           <div style="font-size:32px;margin-bottom:6px">📤</div>
           <div style="font-size:14px;font-weight:700;margin-bottom:4px">.ics 파일을 드래그하거나 클릭해서 선택</div>
-          <div style="font-size:11px;color:var(--ink3)">에어비앤비·부킹닷컴·네이버·구글캘린더 iCal 파일 지원</div>
+          <div style="font-size:11px;color:var(--ink3)">iCal 파일 수동 가져오기 · 공급자별 호환성 확인 필요</div>
           <input type="file" id="icalFile" accept=".ics" style="display:none" onchange="icalFileRead(this)">
         </div>
       </div>
@@ -778,8 +778,8 @@ textarea{resize:vertical;min-height:56px}
       <!-- URL 패널 -->
       <div id="ipanel-url" style="display:none">
         <div style="font-size:12px;color:var(--ink2);margin-bottom:10px;padding:10px 12px;background:var(--paper2);border-radius:var(--r);line-height:1.7">
-          ⚠️ 에어비앤비·부킹닷컴은 보안 정책으로 URL 직접 연동이 차단됩니다.<br>
-          <strong>구글 캘린더</strong>(공개 설정 후), 일부 PMS 시스템만 URL 연동이 가능합니다.
+          ⚠️ 외부 서비스의 보안 정책에 따라 URL 가져오기가 제한될 수 있습니다.<br>
+          <strong>구글 캘린더</strong>(공개 설정 후), 일부 PMS의 공개 URL을 수동으로 시도할 수 있습니다. 자동 갱신은 제공하지 않습니다.
         </div>
         <div class="ical-url-row">
           <input type="text" id="ical-url" placeholder="https://calendar.google.com/calendar/ical/...ics">
@@ -789,7 +789,7 @@ textarea{resize:vertical;min-height:56px}
 
       <!-- 샘플 패널 -->
       <div id="ipanel-sample" style="display:none">
-        <div style="font-size:12px;color:var(--ink2);margin-bottom:12px">실제 예약 데이터가 없어도 달력에 어떻게 표시되는지 바로 확인할 수 있습니다.</div>
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:12px">데모 예시만 표시합니다. 호스트 예약이나 연결된 피드에 저장하지 않습니다.</div>
         <div class="samp-btns">
           <button class="samp-btn" onclick="loadSample('airbnb')">🏠 에어비앤비 샘플</button>
           <button class="samp-btn" onclick="loadSample('booking')">🌐 부킹닷컴 샘플</button>
@@ -802,8 +802,8 @@ textarea{resize:vertical;min-height:56px}
     </div>
       <!-- VIA export URL 섹션 -->
       <div id="icalExportSection" style="display:none;margin-top:14px;padding:14px 20px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">📤 내 공실 캘린더 공유 URL (Export-ICAL)</div>
-        <div style="font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.6">이 URL을 에어비앤비 <strong>다른 앱 캘린더 가져오기</strong>에 등록하면 VIA 예약이 자동 블로킹됩니다.</div>
+        <div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">📤 공실 피드 내보내기 · 미제공</div>
+        <div style="font-size:12px;color:var(--ink2);margin-bottom:8px;line-height:1.6">외부 OTA에 공유할 공실 URL과 자동 블로킹은 아직 지원하지 않습니다.</div>
         <div id="icalExportList"></div>
       </div>
     <div class="mft" style="border-top:1px solid var(--border)"><button class="bcl" onclick="closeMo('moIcal')">닫기</button></div>
@@ -944,15 +944,15 @@ textarea{resize:vertical;min-height:56px}
           <div class="via-field-title">🔗 iCal 연동</div>
           <div class="fg">
             <div class="fgrp full">
-              <label>외부 iCal URL (Sync-IN) — 에어비앤비/부킹닷컴에서 복사</label>
+              <label>외부 iCal URL — 저장만 가능, VIA 자동 가져오기 미제공</label>
               <input type="text" id="vp-ical-in" placeholder="https://www.airbnb.com/calendar/ical/xxx.ics">
             </div>
             <div class="fgrp full">
-              <label>내보내기 URL (Export-ICAL) — 외부에 공유하는 이 숙소 공실 캘린더</label>
-              <div class="export-url-box" id="vp-export-url" onclick="copyExportUrl()" title="클릭해서 복사">
-                숙소를 저장하면 자동 생성됩니다
+              <label>공실 피드 내보내기 — 미제공</label>
+              <div class="export-url-box" id="vp-export-url">
+                공실 피드 내보내기는 아직 제공되지 않습니다
               </div>
-              <div style="font-size:10px;color:var(--ink3);margin-top:4px">📋 이 URL을 에어비앤비 외부 캘린더에 등록하면 VIA 예약이 자동으로 블로킹됩니다</div>
+              <div style="font-size:10px;color:var(--ink3);margin-top:4px">외부 OTA 예약과 결제는 기존 OTA 페이지에서 계속 관리하세요.</div>
             </div>
           </div>
         </div></div>
@@ -1027,13 +1027,13 @@ textarea{resize:vertical;min-height:56px}
 
       <!-- Plan Status -->
       <div class="mp-section">
-        <div class="mp-sec-title">구독 플랜</div>
+        <div class="mp-sec-title">이용 안내</div>
         <div id="mp-plan-box" style="background:var(--paper2);border-radius:var(--rl);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
             <div style="font-weight:700;font-size:14px" id="mp-plan-name">로딩 중...</div>
             <div style="font-size:11px;color:var(--ink3);margin-top:3px" id="mp-plan-desc"></div>
           </div>
-          <a href="pricing.html" style="background:var(--ink);color:#fff;padding:8px 16px;border-radius:var(--r);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap" id="mp-plan-btn">플랜 변경</a>
+          <a href="pricing.html" style="background:var(--ink);color:#fff;padding:8px 16px;border-radius:var(--r);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap" id="mp-plan-btn">이용 안내</a>
         </div>
       </div>
 
@@ -1224,25 +1224,10 @@ function load(){
   }catch(e){}}
   if(!industry.roomColors) industry.roomColors=[];
   const r=localStorage.getItem('sb3r');
-  if(r){reservations=JSON.parse(r);nextId=Math.max(0,...reservations.map(x=>x.id))+1;}else seed();
+  if(r){reservations=JSON.parse(r);nextId=Math.max(0,...reservations.map(x=>x.id))+1;}else{reservations=[];nextId=1;}
   const f=localStorage.getItem('sb3f'); if(f) icalFeeds=JSON.parse(f);
   const vp=localStorage.getItem('sb_via_props'); if(vp) viaProps=JSON.parse(vp);
 }
-function seed(){
-  const y=new Date().getFullYear(),m=new Date().getMonth();
-  const fd=d=>new Date(y,m,d).toISOString().split('T')[0];
-  reservations=[
-    {id:1,name:'김지현',nameEn:'Jihyeon Kim',room:'객실 A (온돌)',status:'confirmed',cin:fd(2),cout:fd(5),cinT:'',coutT:'',guests:2,country:'KR',channel:'에어비앤비',amount:360000,memo:'조식 필요',color:'sage',sticker:'🌸'},
-    {id:2,name:'박서준',nameEn:'Seojun Park',room:'객실 B (마루)',status:'confirmed',cin:fd(7),cout:fd(10),cinT:'',coutT:'',guests:3,country:'KR',channel:'직접예약',amount:420000,memo:'',color:'sky',sticker:''},
-    {id:3,name:'Sarah Chen',nameEn:'Sarah Chen',room:'객실 C (누마루)',status:'pending',cin:fd(11),cout:fd(13),cinT:'',coutT:'',guests:2,country:'SG',channel:'부킹닷컴',amount:200000,memo:'Late check-in',color:'lavender',sticker:'⭐'},
-    {id:4,name:'최현우',nameEn:'Hyunwoo Choi',room:'객실 A (온돌)',status:'confirmed',cin:fd(14),cout:fd(18),cinT:'',coutT:'',guests:4,country:'KR',channel:'에어비앤비',amount:640000,memo:'',color:'peach',sticker:'🔥'},
-    {id:5,name:'田中 健',nameEn:'Ken Tanaka',room:'객실 B (마루)',status:'confirmed',cin:fd(19),cout:fd(22),cinT:'',coutT:'',guests:2,country:'JP',channel:'아고다',amount:300000,memo:'布団希望',color:'mint',sticker:'🌿'},
-    {id:6,name:'한승원',nameEn:'Seungwon Han',room:'객실 C (누마루)',status:'cancelled',cin:fd(21),cout:fd(24),cinT:'',coutT:'',guests:2,country:'KR',channel:'직접예약',amount:300000,memo:'개인사정 취소',color:'slate',sticker:''},
-    {id:7,name:'Emma Wilson',nameEn:'Emma Wilson',room:'객실 A (온돌)',status:'confirmed',cin:fd(25),cout:fd(28),cinT:'',coutT:'',guests:2,country:'GB',channel:'부킹닷컴',amount:380000,memo:'',color:'rose',sticker:'💎'},
-  ];
-  nextId=8;save();
-}
-
 /* ═══════════ HELPERS ═══════════ */
 const fmtD=d=>d.toISOString().split('T')[0];
 const toStr=()=>fmtD(new Date());
@@ -1645,23 +1630,8 @@ function openIcalMo(){
 
   renderIcalList();
 
-  /* VIA export URL 섹션 */
-  const expSec=document.getElementById('icalExportSection');
-  const expList=document.getElementById('icalExportList');
-  if(viaMode&&viaProps.length>0){
-    const baseUrl=window.location.origin+window.location.pathname.replace('app.html','');
-    expSec.style.display='';
-    expList.innerHTML=viaProps.map(p=>`
-      <div style="background:var(--paper2);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;margin-bottom:6px">
-        <div style="font-weight:700;font-size:12px;margin-bottom:4px">${p.name}</div>
-        <div style="display:flex;gap:7px;align-items:center">
-          <input type="text" readonly value="${baseUrl}export-ical.ics?t=${p.exportToken}" style="flex:1;font-size:10px;font-family:'Nanum Gothic Coding',monospace;background:#fff;border:1px solid var(--border);padding:6px 8px;border-radius:3px;color:var(--ink2)">
-          <button onclick="navigator.clipboard.writeText('${baseUrl}export-ical.ics?t=${p.exportToken}').then(()=>toast('복사됨 📋'))" style="padding:6px 10px;background:var(--ink);color:#fff;border:none;border-radius:3px;font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Nanum Gothic',sans-serif">복사</button>
-        </div>
-      </div>`).join('');
-  } else {
-    expSec.style.display='none';
-  }
+  document.getElementById('icalExportSection').style.display='';
+  document.getElementById('icalExportList').textContent='숙소 공실 피드 내보내기는 아직 제공되지 않습니다.';
   document.getElementById('moIcal').classList.add('open');
 }
 
@@ -1870,25 +1840,12 @@ async function fetchIcal(){
   toast(`${added}건 추가 → ${targetRoom}`);
 }
 
-/* ─── 샘플 데이터 (버튼용) ─── */
-function mkSampleICS(src){
-  const y=new Date().getFullYear(),m=new Date().getMonth();
-  const d2s=d=>{const dt=new Date(y,m,d);return `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}`;};
-  const uid=()=>`${src}-${Date.now()}-${Math.random().toString(36).slice(2,7)}@stayblock`;
-  return `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//StayBlock//Sample//KO\r\n`+
-    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(3)}\r\nDTEND;VALUE=DATE:${d2s(6)}\r\nSUMMARY:${src} Guest A\r\nDESCRIPTION:Guest: Sample Guest A\r\nEND:VEVENT\r\n`+
-    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(12)}\r\nDTEND;VALUE=DATE:${d2s(14)}\r\nSUMMARY:Airbnb (Not available)\r\nDESCRIPTION:Blocked dates\r\nEND:VEVENT\r\n`+
-    `BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTART;VALUE=DATE:${d2s(20)}\r\nDTEND;VALUE=DATE:${d2s(24)}\r\nSUMMARY:${src} Guest B\r\nDESCRIPTION:Guest: Sample Guest B\r\nEND:VEVENT\r\n`+
-    `END:VCALENDAR`;
-}
+/* 샘플은 미리보기만 제공하며 호스트 저장소에 기록하지 않습니다. */
 function loadSample(t){
-  const src={airbnb:'에어비앤비',booking:'부킹닷컴',naver:'네이버예약'}[t]||t;
-  const parsed=parseICS(mkSampleICS(src),src);
-  const{added,updated,total}=applyParsed(parsed,src,`sample://${t}`);
-  const resEl=document.getElementById('icalRes');resEl.classList.add('show');
-  const blocks=parsed.filter(r=>r.icalBlock).length;
-  resEl.innerHTML=`✅ <strong>${src} 샘플</strong> ${total}건 로드<br><span style="font-size:11px;color:var(--ink3)">신규 ${added}건 · 업데이트 ${updated}건${blocks?` · 블록 ${blocks}건`:''}`;
-  toast(`샘플 ${added}건 추가`);
+  const src={airbnb:'에어비앤비',booking:'부킹닷컴',naver:'네이버예약'}[t]||'외부 캘린더';
+  const el=document.getElementById('icalRes');
+  el.classList.add('show');
+  el.textContent=`데모 미리보기: ${src} · 예시 예약 3건 (호스트 예약에 저장되지 않습니다). 캘린더 예시는 홈의 데모에서 확인하세요.`;
 }
 function icalFileRead(inp){
   const file=inp.files[0];if(!file)return;
@@ -1926,9 +1883,9 @@ function renderIcalList(){
   const el=document.getElementById('icalSL');
   if(!icalFeeds.length){el.innerHTML='';return;}
   const fmtSync=iso=>{if(!iso)return'';const d=new Date(iso);return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
-  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">연동된 캘린더</div>`+
+  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">등록된 피드 · 수동 가져오기</div>`+
     icalFeeds.map((f,i)=>`<div class="ical-si">
-      <span class="ical-sn">${f.name}</span>
+      <span class="ical-sn">${f.url.startsWith('sample://')?'[기존 데모] ':''}${f.name}</span>
       <span class="ical-su" title="${f.url}">${f.url}</span>
       ${f.lastSync?`<span style="font-size:9px;color:var(--ink3);white-space:nowrap">${fmtSync(f.lastSync)}</span>`:''}
       <button onclick="resyncFeed(${i})" title="재동기화" style="background:none;border:1px solid var(--border);border-radius:3px;padding:2px 6px;cursor:pointer;font-size:10px;color:var(--ink3);white-space:nowrap" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink3)'">↺</button>
@@ -1938,7 +1895,7 @@ function renderIcalList(){
 function delFeed(i){icalFeeds.splice(i,1);save();renderIcalList();}
 async function resyncFeed(i){
   const f=icalFeeds[i];if(!f)return;
-  if(f.url.startsWith('sample://'))return toast('샘플 피드는 재동기화 불필요');
+  if(f.url.startsWith('sample://')||f.url.startsWith('file://'))return toast('샘플·파일 피드는 자동 갱신되지 않습니다. 파일은 다시 업로드해주세요.');
   const resEl=document.getElementById('icalRes');resEl.classList.add('show');
   resEl.innerHTML=`<span style="color:var(--ink3)">⏳ ${f.name} 재동기화 중...</span>`;
   const result=await fetchIcsText(f.url);
@@ -2118,12 +2075,10 @@ function copyInviteLink(){
 function shareKakao(){
   const url = generatedInviteUrl || document.getElementById('inv-link-url').value;
   // KakaoTalk share via web (open app if installed)
-  const msg = encodeURIComponent(`[StayBlock 일정 초대] ${document.getElementById('inv-title').value || '일정 초대가 도착했습니다'}\n\n👉 ${url}`);
   // Fallback: copy link (Kakao JS SDK needs app key; use simple share)
   if(navigator.share){
     navigator.share({title:'StayBlock 일정 초대', text:'일정 초대장이 도착했어요', url});
   } else {
-    window.open(`https://sharer.kakao.com/talk/friends/picker/link?app_key=KAKAO_APP_KEY&text=${msg}`,'_blank','width=400,height=500');
     copyInviteLink();
     toast('링크를 복사했어요. 카카오톡에 붙여넣어 보내세요 💬');
   }
@@ -2176,64 +2131,12 @@ function reCopyInvite(idx){
   });
 }
 
-/* ═══════════ TRIAL / PLAN HELPERS ═══════════ */
-const TRIAL_DAYS=30; // 무료 체험 기간 (일)
-function getTrialStatus(){
-  const users = JSON.parse(localStorage.getItem('sb_users')||'[]');
-  const user  = users.find(u=>u.email===currentUser.email);
-  if(!user) return {status:'trial',daysLeft:TRIAL_DAYS};
-  if(user.plan==='monthly'||user.plan==='yearly') return {status:'premium',plan:user.plan};
-  const joined   = new Date(user.joinedAt||new Date());
-  const diffDays = Math.floor((new Date()-joined)/86400000);
-  const daysLeft = Math.max(0, TRIAL_DAYS-diffDays);
-  return daysLeft>0 ? {status:'trial',daysLeft} : {status:'expired',daysLeft:0};
+/* ═══════════ HOST FREE POLICY ═══════════ */
+function renderFreeBanner(){
+  const bar=document.getElementById('freeBanner');
+  bar.style.cssText='display:flex;align-items:center;justify-content:center;padding:8px 20px;background:#e8f5ee;color:#1a6b3c;font-size:12px;flex-wrap:wrap';
+  bar.textContent='Host Free Beta · 캘린더·공간·예약 관리는 기간 제한 없이 무료입니다. 데이터는 이 브라우저에 저장됩니다.';
 }
-
-function renderTrialBanner(){
-  const ts  = getTrialStatus();
-  const bar = document.getElementById('trialBanner');
-  if(!bar) return;
-  bar.style.display='flex';
-  if(ts.status==='premium'){
-    bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 20px;background:#fdf3dc;border-bottom:1px solid #ffcc80;font-size:12px;font-weight:500;color:#8b6914';
-    bar.innerHTML=`<span>👑</span><span>Premium 구독 중입니다. 감사합니다!</span><a href="pricing.html" style="color:#8b6914;text-decoration:underline;font-weight:600">구독 관리</a>`;
-  } else if(ts.status==='trial'){
-    const pct=Math.round((TRIAL_DAYS-ts.daysLeft)/TRIAL_DAYS*100);
-    const isWarning=ts.daysLeft<=7; // 7일 이하: amber 경고
-    if(isWarning){
-      // 만료 임박 경고 (7일 이하)
-      bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 20px;background:#fff8e1;border-bottom:2px solid #ffc107;font-size:12px;font-weight:600;color:#7a5c1e;flex-wrap:wrap';
-      bar.innerHTML=`<span>⏰</span><span>무료 체험 <strong>${ts.daysLeft}일</strong> 후 종료 — 지금 구독하면 계속 이용 가능해요!</span>
-        <div style="width:80px;height:5px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#f9a825;border-radius:3px"></div></div>
-        <a href="pricing.html" style="background:#f9a825;color:#3e2800;padding:5px 14px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">플랜 보기 →</a>`;
-    } else {
-      // 일반 trial 배너
-      bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 20px;background:#e8f5ee;border-bottom:1px solid #b2dfdb;font-size:12px;font-weight:500;color:#1a6b3c;flex-wrap:wrap';
-      bar.innerHTML=`<span>🎁</span><span>무료 체험 <strong>${ts.daysLeft}일</strong> 남았어요</span>
-        <div style="width:80px;height:5px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#1a6b3c;border-radius:3px"></div></div>
-        <a href="pricing.html" style="color:#1a6b3c;font-weight:700;text-decoration:underline">플랜 보기 →</a>`;
-    }
-  } else {
-    bar.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 20px;background:#fdeaea;border-bottom:1px solid #f48fb1;font-size:12px;font-weight:600;color:#8b1a1a;flex-wrap:wrap';
-    bar.innerHTML=`<span>⚠️</span><span>무료 체험이 종료되었습니다. 예약 조회만 가능합니다.</span>
-      <a href="pricing.html" style="background:#c94f1e;color:#fff;padding:5px 14px;border-radius:5px;font-size:12px;font-weight:700;text-decoration:none">Premium 구독하기 →</a>`;
-    // Lock add/edit buttons for expired users
-    lockExpired();
-  }
-}
-
-function lockExpired(){
-  // Disable add/edit if expired
-  document.querySelectorAll('.btn-p').forEach(b=>{
-    b.style.opacity='.4'; b.style.pointerEvents='none'; b.title='체험 기간이 종료되었습니다';
-  });
-  // Override openAddMo to redirect
-  window._origOpenAddMo = window.openAddMo;
-  window.openAddMo = ()=>{ window.location.href='pricing.html'; };
-  window.openAddDate = ()=>{ window.location.href='pricing.html'; };
-  window.openEditMo  = ()=>{ window.location.href='pricing.html'; };
-}
-
 
 /* ═══════════ VIA PHASE 1 FUNCTIONS ═══════════ */
 
@@ -2257,7 +2160,7 @@ function toggleViaMode(){
     switchSTab('via',document.getElementById('viaTab'));
     renderViaPropBoard();
     const cnt=viaProps.length;
-    document.getElementById('viaPropCount').textContent=cnt>0?`숙소 ${cnt}개 연동`:'숙소 미등록';
+    document.getElementById('viaPropCount').textContent=cnt>0?`숙소 ${cnt}개 등록`:'숙소 미등록';
   } else {
     switchSTab('list',document.querySelectorAll('.stab')[0]);
   }
@@ -2268,7 +2171,7 @@ function toggleViaMode(){
 function renderViaPropBoard(){
   const el=document.getElementById('viaPropBoard');
   if(!viaProps.length){
-    el.innerHTML='<div class="empty"><div>🏥</div><p>숙소를 등록하여 VIA와 연동하세요</p></div>';
+    el.innerHTML='<div class="empty"><div>🏥</div><p>숙소 정보를 등록하세요. VIA 연동은 아직 제공되지 않습니다.</p></div>';
     return;
   }
   el.innerHTML=viaProps.map((p,i)=>`
@@ -2304,24 +2207,16 @@ function openViaPropMo(idx=-1){
   document.getElementById('vp-ical-in').value=p.icalIn||'';
   document.getElementById('vp-license-type').value=p.licenseType||'';
   document.getElementById('vp-license-no').value=p.licenseNo||'';
-  /* export URL 표시 */
-  const token=p.exportToken||(idx>=0?genToken():'');
-  const baseUrl=window.location.origin+window.location.pathname.replace('app.html','');
-  const exportUrl=token?`${baseUrl}export-ical.ics?t=${token}`:'저장 후 생성됩니다';
   const urlEl=document.getElementById('vp-export-url');
-  urlEl.textContent=exportUrl; urlEl.dataset.token=token;
+  urlEl.textContent='공실 피드 내보내기는 아직 제공되지 않습니다';
+  urlEl.dataset.token=p.exportToken||''; // 기존 저장값은 보존하되 URL로 노출하지 않음
   document.getElementById('vp-del-btn').style.display=idx>=0?'':'none';
   document.getElementById('moViaProp').classList.add('open');
 }
 
 /* export URL 복사 */
 function copyExportUrl(){
-  const el=document.getElementById('vp-export-url');
-  const url=el.textContent;
-  if(url.startsWith('저장'))return;
-  navigator.clipboard.writeText(url).then(()=>toast('내보내기 URL이 복사되었습니다 📋')).catch(()=>{
-    const inp=document.createElement('input');inp.value=url;document.body.appendChild(inp);inp.select();document.execCommand('copy');document.body.removeChild(inp);toast('URL 복사됨 📋');
-  });
+  toast('공실 피드 내보내기는 아직 제공되지 않습니다');
 }
 
 /* VIA 숙소 저장 */
@@ -2362,7 +2257,7 @@ function saveViaProp(){
   save();
   closeMo('moViaProp');
   renderViaPropBoard();
-  document.getElementById('viaPropCount').textContent=`숙소 ${viaProps.length}개 연동`;
+  document.getElementById('viaPropCount').textContent=`숙소 ${viaProps.length}개 등록`;
   renderSyncLogs();
   gaEvent('via_prop_save','via',name);
 }
@@ -2385,68 +2280,13 @@ function renderSyncLogs(){
   const inEl=document.getElementById('syncInLog');
   const outEl=document.getElementById('syncOutLog');
   if(!inEl||!outEl)return;
-  /* Sync-IN: 등록된 숙소별 외부 iCal */
-  const inItems=[];
-  /* 기존 icalFeeds (일반 모드 피드) */
-  icalFeeds.forEach(f=>{inItems.push({name:f.name,url:f.url,status:'ok',count:0,lastSynced:'시뮬레이션'});});
-  /* VIA 숙소 ical-in */
-  viaProps.forEach(p=>{
-    if(p.icalIn) inItems.push({name:p.name+' (VIA 연동)',url:p.icalIn,status:p.syncStatus||'idle',count:p.syncCount||0,lastSynced:p.lastSynced?new Date(p.lastSynced).toLocaleString('ko-KR'):'미동기화'});
-  });
-  if(!inItems.length){inEl.innerHTML='<div class="sync-log-item"><span style="color:var(--ink3);font-size:12px;padding:4px">등록된 iCal 피드 없음</span></div>';
-  } else {
-    inEl.innerHTML=inItems.map(it=>`
-      <div class="sync-log-item">
-        <div class="sync-dot ${it.status}"></div>
-        <div class="sync-info">
-          <div class="sync-name">${it.name}</div>
-          <div class="sync-meta">${it.url?it.url.substring(0,55)+'…':'URL 없음'}</div>
-          <div class="sync-meta">마지막 동기화: ${it.lastSynced}</div>
-        </div>
-        <div class="sync-cnt">${it.count>0?it.count+'개':''}</div>
-      </div>`).join('');
-  }
-  /* Sync-OUT: 숙소별 export URL */
-  const baseUrl=window.location.origin+window.location.pathname.replace('app.html','');
-  if(!viaProps.length){outEl.innerHTML='<div class="sync-log-item"><span style="color:var(--ink3);font-size:12px;padding:4px">등록된 VIA 숙소 없음 — 숙소를 등록하면 공개 URL이 자동 생성됩니다</span></div>';
-  } else {
-    outEl.innerHTML=viaProps.map((p,i)=>{
-      const url=`${baseUrl}export-ical.ics?t=${p.exportToken}`;
-      return `<div class="sync-log-item">
-        <div class="sync-dot ok"></div>
-        <div class="sync-info">
-          <div class="sync-name">${p.name}</div>
-          <div class="sync-meta" style="cursor:pointer;color:var(--blue);text-decoration:underline" onclick="navigator.clipboard.writeText('${url}').then(()=>toast('URL 복사됨 📋'))">${url.substring(0,60)}…</div>
-          <div class="sync-meta">Token: <code style="font-size:9px">${p.exportToken}</code></div>
-        </div>
-        <button onclick="openViaPropMo(${i})" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:3px;font-size:11px;cursor:pointer;white-space:nowrap;color:var(--ink2);font-family:'Nanum Gothic',sans-serif">편집</button>
-      </div>`;
-    }).join('');
-  }
+  // 과거 시뮬레이션의 성공/개수/시각을 실제 동기화 증거로 표시하지 않음.
+  inEl.textContent=`등록된 일반 피드 ${icalFeeds.length}개 · VIA 숙소 ${viaProps.length}개. 전체 자동 동기화는 미제공입니다. 일반 피드는 iCal 가져오기에서 개별 수동으로 처리하세요. 기존 샘플 및 파일 피드는 자동 갱신되지 않습니다.`;
+  outEl.textContent='공실 피드 내보내기 미제공 · 외부 OTA 자동 블로킹 없음';
 }
 
-/* 동기화 시뮬레이션 */
 function runSyncAll(){
-  const btn=event.target;
-  btn.textContent='⏳ 동기화 중...';btn.disabled=true;
-  /* 기존 icalFeeds 동기화 */
-  let done=0;const total=viaProps.filter(p=>p.icalIn).length+icalFeeds.length;
-  if(total===0){btn.textContent='▶ 전체 동기화';btn.disabled=false;toast('동기화할 피드가 없습니다');return;}
-  viaProps.forEach((p,i)=>{
-    if(!p.icalIn)return;
-    setTimeout(()=>{
-      viaProps[i].lastSynced=new Date().toISOString();
-      viaProps[i].syncStatus='ok';
-      viaProps[i].syncCount=(viaProps[i].syncCount||0)+Math.floor(Math.random()*3);
-      done++;save();
-      if(done>=total){btn.textContent='▶ 전체 동기화';btn.disabled=false;renderSyncLogs();toast('동기화 완료 ✓');}
-      else renderSyncLogs();
-    },500+i*300);
-  });
-  icalFeeds.forEach((_,i)=>{
-    setTimeout(()=>{done++;if(done>=total){btn.textContent='▶ 전체 동기화';btn.disabled=false;renderSyncLogs();toast('동기화 완료 ✓');}},800+i*400);
-  });
-  gaEvent('sync_all','via','run',total);
+  toast('전체 자동 동기화는 아직 제공되지 않습니다');
 }
 
 /* switchView — sync log 포함 통합 처리 (override 제거) */
@@ -2467,7 +2307,7 @@ function initAuth(){
   document.getElementById('mp-prop-name').value  = prop.name||'';
   document.getElementById('mp-prop-addr').value  = prop.addr||'';
   document.getElementById('mp-prop-phone').value = prop.phone||'';
-  renderTrialBanner();
+  renderFreeBanner();
 }
 
 function toggleUserMenu(){
@@ -2487,36 +2327,9 @@ function doLogout(){
 /* ═══════════ MY PAGE ═══════════ */
 function openMyPage(){
   document.getElementById('userDd').classList.remove('open');
-  // Plan status
-  const ts = getTrialStatus();
-  const planName = document.getElementById('mp-plan-name');
-  const planDesc = document.getElementById('mp-plan-desc');
-  const planBtn  = document.getElementById('mp-plan-btn');
-  const planBox  = document.getElementById('mp-plan-box');
-  if(ts.status==='premium'){
-    planBox.style.background='#fdf3dc';
-    planName.innerHTML='👑 Premium 구독 중';
-    planDesc.textContent=ts.plan==='yearly'?'연간 플랜 · ₩99,000/년':'월간 플랜 · ₩9,900/월';
-    planBtn.textContent='구독 관리';
-    planBtn.style.background='#8b6914';
-  } else if(ts.status==='trial'){
-    const isWarn=ts.daysLeft<=7;
-    planBox.style.background=isWarn?'#fff8e1':'#e8f5ee';
-    planName.innerHTML=isWarn
-      ?`⏰ 무료 체험 <strong>${ts.daysLeft}일</strong> 남음 — 곧 종료됩니다`
-      :`🎁 무료 체험 중 — <strong>${ts.daysLeft}일</strong> 남음`;
-    planDesc.textContent=isWarn
-      ?`체험 만료 전에 구독하면 중단 없이 계속 사용 가능! (총 ${TRIAL_DAYS}일 무료)`
-      :`총 ${TRIAL_DAYS}일 무료 체험 중 — 만료 후 Premium 구독으로 이어가세요.`;
-    planBtn.textContent=isWarn?'지금 구독하기 →':'플랜 보기';
-    planBtn.style.background=isWarn?'#f9a825':'';
-  } else {
-    planBox.style.background='#fdeaea';
-    planName.innerHTML='⚠️ 체험 기간 종료';
-    planDesc.textContent='Premium을 구독하면 모든 기능을 다시 사용할 수 있어요.';
-    planBtn.textContent='지금 구독하기 →';
-    planBtn.style.background='var(--accent)';
-  }
+  document.getElementById('mp-plan-name').textContent='Host Free Beta';
+  document.getElementById('mp-plan-desc').textContent='캘린더·공간·예약 관리 영구 무료 · Pro는 추후 제공 예정';
+  document.getElementById('mp-plan-btn').textContent='이용 안내';
   // Populate stats
   const active = reservations.filter(r=>r.status!=='cancelled');
   document.getElementById('mp-total-res').textContent = active.length + '건';
@@ -2575,7 +2388,7 @@ function clearAllData(){
   if(!confirm('모든 예약 데이터가 삭제됩니다. 계속하시겠습니까?')) return;
   localStorage.removeItem('sb3r'); localStorage.removeItem('sb3f');
   reservations=[]; nextId=1; icalFeeds=[];
-  seed(); renderAll(); closeMo('moMyPage');
+  save(); renderAll(); closeMo('moMyPage');
   toast('데이터가 초기화되었습니다');
 }
 
