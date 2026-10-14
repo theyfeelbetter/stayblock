@@ -18,6 +18,8 @@ node --test tests/*.test.cjs
 
 테스트는 원본 inline JS를 Node VM에서 실행하며 합성 데이터·메모리 localStorage·DOM stub을 사용합니다. 실제 브라우저 E2E나 운영 검증을 대신하지 않습니다.
 
+TASK-003A의 별도 로컬 BFF 준비본은 [실행·API·SQL·검증 문서](docs/task-003a-offline-scaffold.md)를 참고하세요. `node bff/dev.cjs`는 루프백에서 미연동 API에 `501 NOT_CONFIGURED`로 응답합니다. 기존 HTML에는 연결하지 않았으며, Supabase/DB 생성·SQL 실행·데이터 이관을 수행하지 않습니다. 새 테스트의 인증/저장소는 합성 메모리 fixture이며 실제 RLS 보안 검증이 아닙니다.
+
 ## 파일
 
 - `index.html`: 랜딩·명시적 읽기 전용 데모·기존 로그인
