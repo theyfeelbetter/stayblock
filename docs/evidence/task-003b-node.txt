@@ -1,0 +1,44 @@
+✔ syntax index.html (6.82775ms)
+✔ syntax app.html (2.340208ms)
+✔ syntax pricing.html (0.350125ms)
+✔ syntax invite.html (0.562458ms)
+✔ free room and reservation CRUD at day 0 (131.453875ms)
+✔ free room and reservation CRUD at day 29 (1.916917ms)
+✔ free room and reservation CRUD at day 30 (2.156625ms)
+✔ free room and reservation CRUD at day 365 (3.525167ms)
+✔ load preserves all existing records including legacy plans and mock metadata (1.347125ms)
+✔ empty host dataset and sample preview never seed bookings (1.239125ms)
+✔ explicit reset stays empty rather than reseeding demo (1.593875ms)
+✔ paid query cannot modify legacy entitlement on pricing or app (1.203958ms)
+✔ supported simple ICS import is idempotent and CSV exports it (2.574042ms)
+✔ individual invitation ICS remains available (1.113958ms)
+✔ no paid gating or fake success endpoint remains in user pages (1.825667ms)
+✔ local DB runner refuses remote, default DB, malformed name and confirmation mismatch before connecting (402.27475ms)
+✔ local DB runner refuses missing creation receipt without connecting (47.005583ms)
+✔ production drafts retain unconditional execution guards (0.515958ms)
+✔ psql refusal uses ON_ERROR_STOP rather than unsupported quit exit-code arguments (0.272916ms)
+✔ client defaults to disabled and never accesses browser storage or network (8.460333ms)
+✔ public browser cannot enable local adapter and no browser storage is touched (0.797ms)
+✔ explicit local adapter propagates 501/network failures with no silent fallback (40.942417ms)
+✔ adapter session/read path exercises same API dispatcher with synthetic cookie transport (3.41775ms)
+✔ unconfigured server fails closed; no mock login/provider call can be enabled (5.62ms)
+✔ anonymous and forged localStorage/header/body identities are rejected (2.104834ms)
+✔ A/B tenant separation applies to lists, IDs, mutations and foreign keys (6.618291ms)
+✔ viewer cannot mutate and role revocation/suspension takes effect on next request (0.743209ms)
+✔ stable UUID room identity survives duplicate display names and rename (0.786458ms)
+✔ mutation validation rejects mass assignment, invalid dates, amounts and identifiers (3.341458ms)
+✔ CSRF, origin, content-type, host and method guards run before writes (1.191083ms)
+✔ optimistic version protects update and soft deletion from stale writes (1.319375ms)
+✔ verified onboarding produces empty tenant; same key retries do not duplicate (1.543209ms)
+✔ unverified, expired and revoked sessions fail; logout invalidates session (0.775042ms)
+✔ property/room CRUD preserves parent IDs and archived room cannot receive new reservation (0.525917ms)
+✔ future invitations, iCal, migration and role-changing routes stay unavailable (0.714583ms)
+✔ real loopback HTTP transport: 501, host guard, malformed JSON and body limit (44.49475ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 544.73
