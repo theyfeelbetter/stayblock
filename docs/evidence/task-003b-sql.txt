@@ -1,0 +1,68 @@
+REFUSE_TARGET_IDENTITY
+PASS|wrong database identity refuses before DDL|SQLSTATE=N/A
+PASS|anonymous SELECT|role=stayblock_task003b_90a77c679122_anon|SQLSTATE=42501|value=<none>
+PASS|anonymous INSERT|role=stayblock_task003b_90a77c679122_anon|SQLSTATE=42501|value=<none>
+PASS|anonymous private helper|role=stayblock_task003b_90a77c679122_anon|SQLSTATE=42501|value=<none>
+PASS|non-owner non-superuser RLS context|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+t
+PASS|missing claims hides rows|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+t
+PASS|forged session hides rows|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+t
+PASS|mismatched user session hides rows|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+t
+PASS|A reads only A|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+PASS|A IDOR SELECT B|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|A IDOR UPDATE B|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|A foreign tenant INSERT|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|A valid property INSERT|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=1
+PASS|A valid reservation INSERT|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=1
+PASS|cross-tenant room injection|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=P0001|value=<none>
+PASS|cross-tenant property injection|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=P0001|value=<none>
+PASS|immutable tenant column|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|immutable actor column|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|immutable UUID column|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|hard DELETE denied|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|private sessions unreadable|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|audit cannot be forged|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|fixed helper search_path|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+PASS|helper owner not superuser/BYPASSRLS|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+PASS|cannot create function in private schema|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|cannot create table in public schema|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|no auth schema CREATE|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=false
+PASS|cannot assume helper reader role|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=false
+PASS|cannot assume audit role|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=false
+PASS|trigger functions not directly executable|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+PASS|invalid negative amount constraint|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=23514|value=<none>
+PASS|invalid date range constraint|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=23514|value=<none>
+PASS|invalid date syntax|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=22008|value=<none>
+PASS|valid versioned UPDATE|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=2
+PASS|stale explicit version rejected|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=P0001|value=<none>
+PASS|missing next version rejected|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=P0001|value=<none>
+PASS|conditional stale update affects zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|stable room UUID on rename|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+t
+PASS|B reads only B|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=true
+PASS|B INSERT A denied|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|B UPDATE A affects zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|B valid UPDATE|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=2
+t
+PASS|viewer reads A|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=2
+PASS|viewer INSERT denied|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|viewer UPDATE affects zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+t
+PASS|manager valid UPDATE|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=3
+PASS|manager cannot elevate membership|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|manager cannot create membership|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+PASS|revoked member SELECT zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|revoked member INSERT denied|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=42501|value=<none>
+t
+PASS|revoked session SELECT zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|expired session SELECT zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|suspended organization SELECT zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|missing provider session SELECT zero|role=stayblock_task003b_90a77c679122_authenticated|SQLSTATE=00000|value=0
+PASS|ADMIN-CONSTRAINT orphan room restriction|role=ADMIN_SETUP|SQLSTATE=23503|value=<none>
+PASS|ADMIN-CONSTRAINT orphan property restriction|role=ADMIN_SETUP|SQLSTATE=23503|value=<none>
+PASS|ADMIN-CONSTRAINT composite FK independent of guard|role=ADMIN_SETUP|SQLSTATE=23503|value=<none>
+NOT_IMPLEMENTED|last-owner transfer/bootstrap
+NOT_VERIFIED|Supabase JWT signatures/PostgREST/provider session lifecycle
