@@ -8,6 +8,9 @@ on:
       - 'tests/v3-calendar-date.test.cjs'
       - 'tests/v3-reservation-conflicts.test.cjs'
       - 'tests/neon-config.test.cjs'
+      - 'tests/verified-db-session.test.cjs'
+      - 'bff/verified-db-session.cjs'
+      - 'db/neon/**'
       - 'bff/neon-config.cjs'
       - '.github/workflows/v3-smoke.yml'
   workflow_dispatch:
@@ -21,4 +24,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/v3-static-smoke.test.cjs tests/v3-calendar-date.test.cjs tests/v3-reservation-conflicts.test.cjs tests/neon-config.test.cjs
+      - run: node --test tests/v3-static-smoke.test.cjs tests/v3-calendar-date.test.cjs tests/v3-reservation-conflicts.test.cjs tests/neon-config.test.cjs tests/verified-db-session.test.cjs
