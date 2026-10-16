@@ -1535,6 +1535,12 @@ function openEditMo(id){
   buildColPicker(pColor);buildStPicker(pSticker);buildChPicker(pChannel);
   document.getElementById('moAdd').classList.add('open');
 }
+// UI-side early warning only: authoritative conflicts MUST be checked atomically by the future DB/BFF.
+function hasDayReservationConflict(candidate, existing, excludeId=null){
+  if(candidate.status==='cancelled') return false;
+  return existing.some(r=>r.id!==excludeId&&r.status!=='cancelled'&&r.room===candidate.room&&
+    !r.cinT&&!r.coutT&&candidate.cin<r.cout&&r.cin<candidate.cout);
+}
 function saveRes(){
   const name=document.getElementById('f-name').value.trim(),cin=document.getElementById('f-cin').value,cout=document.getElementById('f-cout').value;
   if(!name){alert('이름을 입력해주세요');return;}if(!cin||!cout){alert('날짜를 입력해주세요');return;}
@@ -1543,6 +1549,7 @@ function saveRes(){
   const adults=parseInt(document.getElementById('f-adults').value)||1;
   const children=parseInt(document.getElementById('f-children').value)||0;
   const data={name,nameEn:document.getElementById('f-name-en').value.trim(),room:document.getElementById('f-room').value,status:document.getElementById('f-status').value,cin,cout,cinT:isH?document.getElementById('f-cin-t').value:'',coutT:isH?document.getElementById('f-cout-t').value:'',adults,children,guests:adults+children,country:document.getElementById('f-country').value,channel:getCh(),amount:parseInt(document.getElementById('f-amount').value)||0,memo:document.getElementById('f-memo').value.trim(),color:pColor,sticker:pSticker};
+  if(!isH&&data.status!=='cancelled'&&hasDayReservationConflict(data,reservations,editingId||null)){alert('같은 객실에 겹치는 예약이 있습니다. 날짜를 다시 확인해주세요.');return;}
   if(editingId){const idx=reservations.findIndex(r=>r.id===editingId);reservations[idx]={...reservations[idx],...data};toast('수정되었습니다');const uid=editingId;closeMo('moAdd');save();renderAll();selRes(uid);}
   else{data.id=nextId++;reservations.push(data);toast('예약이 추가되었습니다');const nid=data.id;closeMo('moAdd');save();renderAll();selRes(nid);}
 }
