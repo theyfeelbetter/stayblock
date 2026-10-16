@@ -5,6 +5,13 @@ const secret = process.env.BETTER_AUTH_SECRET;
 if (!connectionString || !secret || secret.length < 32 || !process.env.BETTER_AUTH_URL) {
   throw new Error('AUTH_ENV_NOT_CONFIGURED');
 }
+const parsedAuthDbUrl = new URL(connectionString);
+if (!['postgresql:', 'postgres:'].includes(parsedAuthDbUrl.protocol) ||
+    parsedAuthDbUrl.username !== 'stayblock_auth_login' ||
+    !parsedAuthDbUrl.hostname.endsWith('.neon.tech') ||
+    !['require', 'verify-full'].includes(parsedAuthDbUrl.searchParams.get('sslmode'))) {
+  throw new Error('AUTH_DB_ROLE_OR_TLS_UNSAFE');
+}
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret,
