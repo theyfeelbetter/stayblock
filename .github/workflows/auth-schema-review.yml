@@ -21,9 +21,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install schema tooling in isolated directory
+        run: |
+          mkdir -p /tmp/stayblock-auth-tool
+          cd /tmp/stayblock-auth-tool
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund better-auth@latest pg@latest auth@latest
+          ln -s /tmp/stayblock-auth-tool/node_modules "$GITHUB_WORKSPACE/node_modules"
       - name: Generate review-only Prisma schema without database
-        run: npx --yes auth@latest generate --adapter prisma --dialect postgresql --config ./auth.config.mjs --output ./auth-review.prisma --yes
+        run: /tmp/stayblock-auth-tool/node_modules/.bin/auth generate --adapter prisma --dialect postgresql --config ./auth.config.mjs --output ./auth-review.prisma --yes
       - name: Verify expected auth entities
         run: |
           test -s auth-review.prisma
