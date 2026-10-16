@@ -10,7 +10,7 @@ function context(){
  const pool={connect:async()=>({
   query:async(sql,args=[])=>{
    observed.push({sql,args});
-   if(sql==='SELECT current_user AS db_role')return {rows:[{db_role:'stayblock_runtime'}]};
+   if(sql==='SELECT current_user AS db_role')return {rows:[{db_role:'stayblock_http'}]};
    if(sql.includes('FROM stayblock.reservations')){
     const current=observed.findLast(q=>q.sql.includes('set_config'))?.args?.[0];
     return {rows:current==='fixture-user-a'&&args[0]===A?[{id:ROOM,room_id:ROOM}]:[],rowCount:current==='fixture-user-a'&&args[0]===A?1:0};
