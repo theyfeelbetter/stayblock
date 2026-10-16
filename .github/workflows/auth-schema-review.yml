@@ -1,0 +1,36 @@
+name: Better Auth schema review (offline)
+on:
+  pull_request:
+    paths:
+      - 'auth.config.mjs'
+      - 'package.json'
+      - '.github/workflows/auth-schema-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      AUTH_DATABASE_URL: postgresql://fixture:fixture@localhost:5432/fake
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: only-for-offline-schema-generation-fixture-000000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Generate review-only Prisma schema without database
+        run: npx --yes auth@latest generate --adapter prisma --dialect postgresql --config ./auth.config.mjs --output ./auth-review.prisma --yes
+      - name: Verify expected auth entities
+        run: |
+          test -s auth-review.prisma
+          grep -Eq 'model (user|User)' auth-review.prisma
+          grep -Eq 'model (session|Session)' auth-review.prisma
+          grep -Eq 'model (account|Account)' auth-review.prisma
+      - uses: actions/upload-artifact@v4
+        with:
+          name: better-auth-generated-schema-review
+          path: auth-review.prisma
