@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import pg from 'pg';
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.AUTH_DATABASE_URL;
 const secret = process.env.BETTER_AUTH_SECRET;
 if (!connectionString || !secret || secret.length < 32 || !process.env.BETTER_AUTH_URL) {
   throw new Error('AUTH_ENV_NOT_CONFIGURED');
