@@ -8,7 +8,7 @@ if (!connectionString || !secret || secret.length < 32 || !process.env.BETTER_AU
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret,
-  database: new pg.Pool({connectionString, max: 4, ssl: {rejectUnauthorized: true}}),
+  database: new pg.Pool({connectionString, max: 4, options: '-c search_path=stayblock_auth', ssl: {rejectUnauthorized: true}}),
   emailAndPassword: {enabled: true, disableSignUp: true},
   trustedOrigins: [process.env.BETTER_AUTH_URL],
   session: {expiresIn: 60*60*24*7, updateAge: 60*60*24},
