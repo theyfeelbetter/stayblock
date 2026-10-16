@@ -1236,7 +1236,7 @@ function load(){
 }
 function seed(){
   const y=new Date().getFullYear(),m=new Date().getMonth();
-  const fd=d=>new Date(y,m,d).toISOString().split('T')[0];
+  const fd=d=>[new Date(y,m,d).getFullYear(),String(new Date(y,m,d).getMonth()+1).padStart(2,'0'),String(new Date(y,m,d).getDate()).padStart(2,'0')].join('-');
   reservations=[
     {id:1,name:'김지현',nameEn:'Jihyeon Kim',room:'객실 A (온돌)',status:'confirmed',cin:fd(2),cout:fd(5),cinT:'',coutT:'',guests:2,country:'KR',channel:'에어비앤비',amount:360000,memo:'조식 필요',color:'sage',sticker:'🌸'},
     {id:2,name:'박서준',nameEn:'Seojun Park',room:'객실 B (마루)',status:'confirmed',cin:fd(7),cout:fd(10),cinT:'',coutT:'',guests:3,country:'KR',channel:'직접예약',amount:420000,memo:'',color:'sky',sticker:''},
@@ -1250,7 +1250,7 @@ function seed(){
 }
 
 /* ═══════════ HELPERS ═══════════ */
-const fmtD=d=>d.toISOString().split('T')[0];
+const fmtD=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const toStr=()=>fmtD(new Date());
 const money=n=>'₩'+Number(n).toLocaleString('ko-KR');
 const getCol=id=>BLOCK_COLORS.find(c=>c.id===id)||BLOCK_COLORS[0];
