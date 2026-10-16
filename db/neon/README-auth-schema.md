@@ -1,0 +1,1 @@
+Derived from official Better Auth schema generation artifact run #38840171024; Prisma models User,Session,Account,Verification. SQL is adapted for stayblock_auth schema and must be verified with actual Better Auth runtime before launch. Never run against production.

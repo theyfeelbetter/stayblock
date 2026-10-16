@@ -1,0 +1,27 @@
+/* StayBlock V3 — approved visual foundation, 2026-10-16.
+   For staged app integration only; this file does not activate or replace authentication/booking logic. */
+:root {
+  --sb-bg: #F5F7FC;
+  --sb-surface: #FFFFFF;
+  --sb-surface-soft: #EEF0F9;
+  --sb-border: #DFE3F0;
+  --sb-text: #292750;
+  --sb-text-muted: #727895;
+  --sb-brand: #434180;
+  --sb-coral: #FFB8BA;
+  --sb-lavender: #D1D0ED;
+  --sb-success-text: #335C48;
+  --sb-danger-text: #813D50;
+  --sb-radius-card: 20px;
+  --sb-radius-control: 12px;
+  --sb-shadow-card: 0 10px 26px rgba(46,52,103,.045);
+}
+.sb-v3-shell {color:var(--sb-text);background:var(--sb-bg);font-family:Inter,system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif}
+.sb-v3-shell *, .sb-v3-shell *::before, .sb-v3-shell *::after{box-sizing:border-box}
+.sb-v3-card {background:var(--sb-surface);border:1px solid var(--sb-border);border-radius:var(--sb-radius-card);box-shadow:var(--sb-shadow-card)}
+.sb-v3-muted{color:var(--sb-text-muted)}
+.sb-v3-action {background:var(--sb-coral);color:var(--sb-text);border-radius:var(--sb-radius-control);min-height:44px}
+.sb-v3-shell :focus-visible{outline:3px solid #CB5773;outline-offset:3px}
+.sb-v3-mobile-nav{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.sb-v3-mobile-nav a,.sb-v3-mobile-nav button{min-height:44px;min-width:44px}
+@media(prefers-reduced-motion:reduce){.sb-v3-shell *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
