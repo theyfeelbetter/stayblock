@@ -21,3 +21,5 @@ test('original marketing homepage content and beta form retained',()=>{
  assert.match(home,/class="bento-grid"/);assert.match(app,/initAuth\(\)/);
  assert.match(beta,/id="loginForm"/);assert.match(beta,/id="bookingForm"/);
 });
+
+test('pricing uses free private-beta offer and removes obsolete paid billing UI',()=>{const p=fs.readFileSync(path.join(root,'pricing.html'),'utf8');assert.match(p,/PRIVATE BETA/);assert.match(p,/₩0/);assert.doesNotMatch(p,/billing-toggle|Premium 구독이 활성화/);});
