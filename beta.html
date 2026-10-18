@@ -7,7 +7,8 @@ body{margin:0}header{background:#fff;padding:20px clamp(16px,4vw,54px);border-bo
 main{max-width:1040px;margin:32px auto;padding:0 18px}.panel{background:#fff;border:1px solid #d1d0ed;border-radius:16px;padding:24px;margin:16px 0;box-shadow:0 4px 15px #29275008}h1{font-size:1.5rem}h2{font-size:1.1rem}
 label{display:block;font-size:.88rem;margin:12px 0 5px}input,select,button{font:inherit;border-radius:9px;padding:11px;border:1px solid #bbb9d9}input,select{width:100%;background:#fff;color:#292750}button{background:#434180;color:#fff;border:0;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#d1d0ed;color:#292750}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:11px;text-align:left;border-bottom:1px solid #eee}#notice{min-height:22px;color:#a53232}small{color:#676587}.hidden{display:none!important}@media(max-width:650px){.panel{padding:15px}table{font-size:.76rem}}
-</style></head>
+</style><link rel="stylesheet" href="ui/v3-unified.css">
+</head>
 <body><header><strong>StayBlock <small>PRIVATE BETA</small></strong><button id="logout" class="secondary hidden">로그아웃</button></header>
 <main><h1>호스트 예약 관리</h1><p id="notice" role="status"></p>
 <section id="loginPanel" class="panel"><h2>호스트 로그인</h2><form id="loginForm"><div class="grid"><div><label for="email">이메일</label><input id="email" type="email" required autocomplete="username"></div><div><label for="password">비밀번호</label><input id="password" type="password" required autocomplete="current-password"></div></div><p><button type="submit">로그인</button></p></form><small>초대받은 호스트 전용입니다. 이 화면에서는 계정을 만들 수 없습니다.</small></section>
