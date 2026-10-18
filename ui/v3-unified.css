@@ -106,18 +106,18 @@ body:has(.plans) .trust-wrap{background:#EEF0F9;border-color:#DFE3F0}
 @media(max-width:720px){body:has(.plans) .hd{padding:14px 18px}body:has(.plans) .plans{gap:15px}}
 
 /* Invitation/RSVP pages: lavender trust surface, coral micro accents */
-body:has(.invite-card){--ink:#292750;--ink2:#535675;--ink3:#777D99;--paper:#F5F7FC;--paper2:#EEF0F9;--paper3:#DFE3F0;--accent:#434180;--accent2:#6A66B2;--green:#335C48;--green2:#EAF4EE;--red:#99475A;--red2:#FFECEE;--border:#DFE3F0;--r:12px;--rl:20px;--sh:0 3px 16px #2927500b;--sh2:0 12px 34px #29275016}
-body:has(.invite-card) .topbar{background:#fff;color:#292750;border-bottom:1px solid #DFE3F0;padding:18px 30px}
-body:has(.invite-card) .topbar-logo{font-family:Inter,system-ui,sans-serif;font-weight:850;color:#292750}
-body:has(.invite-card) .topbar-logo span{color:#434180}
-body:has(.invite-card) .card-wrap{max-width:600px;padding-top:56px}
-body:has(.invite-card) .state-title{font-family:Inter,system-ui,sans-serif;font-weight:800;color:#292750}
-body:has(.invite-card) .invite-card{border-color:#DFE3F0;box-shadow:var(--sb-shadow)}
-body:has(.invite-card) .invite-type-icon{background:#EAEAF8;color:#434180}
-body:has(.invite-card) .btn-accept{background:#434180}
-body:has(.invite-card) .btn-accept:hover{background:#55529A;box-shadow:0 8px 25px #43418024}
-body:has(.invite-card) .cal-btn{border-radius:12px}
-body:has(.invite-card) .type-badge{border-radius:24px}
+body:has(.card-wrap){--ink:#292750;--ink2:#535675;--ink3:#777D99;--paper:#F5F7FC;--paper2:#EEF0F9;--paper3:#DFE3F0;--accent:#434180;--accent2:#6A66B2;--green:#335C48;--green2:#EAF4EE;--red:#99475A;--red2:#FFECEE;--border:#DFE3F0;--r:12px;--rl:20px;--sh:0 3px 16px #2927500b;--sh2:0 12px 34px #29275016}
+body:has(.card-wrap) .topbar{background:#fff;color:#292750;border-bottom:1px solid #DFE3F0;padding:18px 30px}
+body:has(.card-wrap) .topbar-logo{font-family:Inter,system-ui,sans-serif;font-weight:850;color:#292750}
+body:has(.card-wrap) .topbar-logo span{color:#434180}
+body:has(.card-wrap) .card-wrap{max-width:600px;padding-top:56px}
+body:has(.card-wrap) .state-title{font-family:Inter,system-ui,sans-serif;font-weight:800;color:#292750}
+body:has(.card-wrap) .invite-card{border-color:#DFE3F0;box-shadow:var(--sb-shadow)}
+body:has(.card-wrap) .invite-type-icon{background:#EAEAF8;color:#434180}
+body:has(.card-wrap) .btn-accept{background:#434180}
+body:has(.card-wrap) .btn-accept:hover{background:#55529A;box-shadow:0 8px 25px #43418024}
+body:has(.card-wrap) .cal-btn{border-radius:12px}
+body:has(.card-wrap) .type-badge{border-radius:24px}
 
 /* Functional beta: match approved V3 dashboard styling; no DOM or auth logic changes */
 body:has(#loginPanel){--beta-ink:#292750;background:#F5F7FC}
