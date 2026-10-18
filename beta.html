@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>StayBlock | Private beta</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#292750;background:#f5f7fc}*{box-sizing:border-box}
+body{margin:0}header{background:#fff;padding:20px clamp(16px,4vw,54px);border-bottom:1px solid #d1d0ed;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1040px;margin:32px auto;padding:0 18px}.panel{background:#fff;border:1px solid #d1d0ed;border-radius:16px;padding:24px;margin:16px 0;box-shadow:0 4px 15px #29275008}h1{font-size:1.5rem}h2{font-size:1.1rem}
+label{display:block;font-size:.88rem;margin:12px 0 5px}input,select,button{font:inherit;border-radius:9px;padding:11px;border:1px solid #bbb9d9}input,select{width:100%;background:#fff;color:#292750}button{background:#434180;color:#fff;border:0;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#d1d0ed;color:#292750}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:11px;text-align:left;border-bottom:1px solid #eee}#notice{min-height:22px;color:#a53232}small{color:#676587}.hidden{display:none!important}@media(max-width:650px){.panel{padding:15px}table{font-size:.76rem}}
+</style></head>
+<body><header><strong>StayBlock <small>PRIVATE BETA</small></strong><button id="logout" class="secondary hidden">로그아웃</button></header>
+<main><h1>호스트 예약 관리</h1><p id="notice" role="status"></p>
+<section id="loginPanel" class="panel"><h2>호스트 로그인</h2><form id="loginForm"><div class="grid"><div><label for="email">이메일</label><input id="email" type="email" required autocomplete="username"></div><div><label for="password">비밀번호</label><input id="password" type="password" required autocomplete="current-password"></div></div><p><button type="submit">로그인</button></p></form><small>초대받은 호스트 전용입니다. 이 화면에서는 계정을 만들 수 없습니다.</small></section>
+<div id="appPanel" class="hidden">
+<section class="panel"><h2>숙소 선택</h2><div class="grid"><div><label for="host">호스트</label><select id="host"></select></div><div><label for="room">객실</label><select id="room"></select></div></div></section>
+<section class="panel"><h2>예약 등록</h2><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit">예약 저장</button></p></form></section>
+<section class="panel"><div class="actions"><h2>예약 목록</h2><button type="button" id="refresh" class="secondary">새로고침</button></div><div style="overflow-x:auto"><table><thead><tr><th>체크인</th><th>체크아웃</th><th>객실</th><th>상태</th><th>관리</th></tr></thead><tbody id="bookings"></tbody></table></div></section>
+</div></main><script type="module">
+const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
+let context={hosts:[],properties:[],rooms:[]};
+async function request(path,options={}){
+ const r=await fetch(path,{credentials:'same-origin',headers:{'content-type':'application/json'},...options});
+ let body={};try{body=await r.json()}catch{}
+ if(!r.ok)throw Error(body.error||'HTTP '+r.status);
+ return body;
+}
+function display(authed){
+ el('loginPanel').classList.toggle('hidden',authed);
+ el('appPanel').classList.toggle('hidden',!authed);
+ el('logout').classList.toggle('hidden',!authed);
+}
+const option=(value,title)=>new Option(title,value);
+function hostChanged(){
+ const hostId=el('host').value;
+ el('room').replaceChildren(...context.rooms.filter(r=>r.host_id===hostId).map(r=>option(r.id,r.name)));
+ void refresh();
+}
+async function load(){
+ try{
+  await request('/api/auth/get-session').then(r=>{if(!r?.user?.id)throw Error('UNAUTHENTICATED')});
+  context=await request('/api/me');
+  el('host').replaceChildren(...context.hosts.map(h=>option(h.id,h.name)));
+  display(true);hostChanged();notice('');
+ }catch{display(false);notice('로그인이 필요하거나 베타 API가 아직 열리지 않았습니다.');}
+}
+async function refresh(){
+ const hostId=el('host').value;if(!hostId)return;
+ try{
+  const rows=(await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations')).reservations||[];
+  const tbody=el('bookings');tbody.replaceChildren();
+  for(const r of rows){
+    const tr=document.createElement('tr');
+    const room=context.rooms.find(x=>x.id===r.room_id);
+    for(const value of [String(r.check_in).slice(0,10),String(r.check_out).slice(0,10),room?.name||'객실',r.status]){
+      const td=document.createElement('td');td.textContent=value;tr.append(td);
+    }
+    const td=document.createElement('td'),button=document.createElement('button');button.className='secondary';button.textContent='삭제';
+    button.addEventListener('click',async()=>{
+      if(!confirm('이 예약을 삭제하시겠습니까?'))return;
+      try{await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations/'+encodeURIComponent(r.id),{method:'DELETE'});notice('삭제했습니다.');await refresh()}catch(e){notice(e.message)}
+    });td.append(button);tr.append(td);tbody.append(tr);
+  }
+ }catch(e){notice('예약 목록 조회 실패: '+e.message)}
+}
+el('host').addEventListener('change',hostChanged);
+el('refresh').addEventListener('click',refresh);
+el('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();notice('로그인 확인 중...');
+ try{await request('/api/auth/sign-in/email',{method:'POST',body:JSON.stringify({email:el('email').value,password:el('password').value})});el('password').value='';await load();}
+ catch(e){notice('로그인 실패: '+e.message)}
+});
+el('bookingForm').addEventListener('submit',async e=>{
+ e.preventDefault();const hostId=el('host').value;
+ if(!hostId||!el('room').value){notice('객실을 선택하세요.');return}
+ try{
+  await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations',{method:'POST',body:JSON.stringify({roomId:el('room').value,checkIn:el('checkIn').value,checkOut:el('checkOut').value,status:el('status').value})});
+  notice('예약을 저장했습니다.');await refresh();
+ }catch(e){notice(e.message==='RESERVATION_CONFLICT'?'동일 객실에 중복 예약이 있습니다.':'예약 실패: '+e.message)}
+});
+el('logout').addEventListener('click',async()=>{try{await request('/api/auth/sign-out',{method:'POST',body:'{}'})}catch{}context={hosts:[],properties:[],rooms:[]};display(false);notice('로그아웃했습니다.')});
+void load();
+</script></body></html>
