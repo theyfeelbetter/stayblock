@@ -7,6 +7,6 @@ for(const file of ['api/hosts/[hostId]/reservations.mjs','api/hosts/[hostId]/res
    assert.match(text,/BETA_API_DISABLED/);
    assert.match(text,/assertDbTarget\(process\.env\)/);
    assert.match(text,/BETA_NOT_CONFIGURED/);
-   assert.ok(text.indexOf("STAYBLOCK_BETA_API_ENABLED")<text.indexOf("guardedPool()"),'deny before runtime DB connection');
+   assert.ok(text.indexOf("STAYBLOCK_BETA_API_ENABLED",text.indexOf('export default async function handler'))<text.indexOf("db=guardedPool()"),'deny before runtime DB connection');
  });
 }
