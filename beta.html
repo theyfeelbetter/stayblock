@@ -13,11 +13,13 @@ label{display:block;font-size:.88rem;margin:12px 0 5px}input,select,button{font:
 <section id="loginPanel" class="panel"><h2>호스트 로그인</h2><form id="loginForm"><div class="grid"><div><label for="email">이메일</label><input id="email" type="email" required autocomplete="username"></div><div><label for="password">비밀번호</label><input id="password" type="password" required autocomplete="current-password"></div></div><p><button type="submit">로그인</button></p></form><small>초대받은 호스트 전용입니다. 이 화면에서는 계정을 만들 수 없습니다.</small></section>
 <div id="appPanel" class="hidden">
 <section class="panel"><h2>숙소 선택</h2><div class="grid"><div><label for="host">호스트</label><select id="host"></select></div><div><label for="room">객실</label><select id="room"></select></div></div></section>
-<section class="panel"><h2>예약 등록</h2><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit">예약 저장</button></p></form></section>
+<section class="panel"><h2>예약 등록</h2><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit" id="submitBooking">예약 저장</button> <button type="button" class="secondary" id="cancelEdit">수정 취소</button></p></form></section>
 <section class="panel"><div class="actions"><h2>예약 목록</h2><button type="button" id="refresh" class="secondary">새로고침</button></div><div style="overflow-x:auto"><table><thead><tr><th>체크인</th><th>체크아웃</th><th>객실</th><th>상태</th><th>관리</th></tr></thead><tbody id="bookings"></tbody></table></div></section>
 </div></main><script type="module">
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
 let context={hosts:[],properties:[],rooms:[]};
+let editing=null;
+function resetEdit(){editing=null;el('submitBooking').textContent='예약 저장';el('bookingForm').reset();}
 async function request(path,options={}){
  const r=await fetch(path,{credentials:'same-origin',headers:{'content-type':'application/json'},...options});
  let body={};try{body=await r.json()}catch{}
@@ -31,6 +33,7 @@ function display(authed){
 }
 const option=(value,title)=>new Option(title,value);
 function hostChanged(){
+ resetEdit();
  const hostId=el('host').value;
  el('room').replaceChildren(...context.rooms.filter(r=>r.host_id===hostId).map(r=>option(r.id,r.name)));
  void refresh();
@@ -54,7 +57,14 @@ async function refresh(){
     for(const value of [String(r.check_in).slice(0,10),String(r.check_out).slice(0,10),room?.name||'객실',r.status]){
       const td=document.createElement('td');td.textContent=value;tr.append(td);
     }
-    const td=document.createElement('td'),button=document.createElement('button');button.className='secondary';button.textContent='삭제';
+    const td=document.createElement('td');
+    const edit=document.createElement('button');edit.className='secondary';edit.textContent='수정';edit.style.marginRight='8px';
+    edit.addEventListener('click',()=>{
+      editing={id:r.id,version:r.version};el('room').value=r.room_id;
+      el('checkIn').value=String(r.check_in).slice(0,10);el('checkOut').value=String(r.check_out).slice(0,10);el('status').value=r.status;
+      el('submitBooking').textContent='변경 저장';notice('예약 수정 중');el('bookingForm').scrollIntoView({behavior:'smooth'});
+    });td.append(edit);
+    const button=document.createElement('button');button.className='secondary';button.textContent='삭제';
     button.addEventListener('click',async()=>{
       if(!confirm('이 예약을 삭제하시겠습니까?'))return;
       try{await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations/'+encodeURIComponent(r.id),{method:'DELETE'});notice('삭제했습니다.');await refresh()}catch(e){notice(e.message)}
@@ -73,10 +83,12 @@ el('bookingForm').addEventListener('submit',async e=>{
  e.preventDefault();const hostId=el('host').value;
  if(!hostId||!el('room').value){notice('객실을 선택하세요.');return}
  try{
-  await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations',{method:'POST',body:JSON.stringify({roomId:el('room').value,checkIn:el('checkIn').value,checkOut:el('checkOut').value,status:el('status').value})});
-  notice('예약을 저장했습니다.');await refresh();
+  const url='/api/hosts/'+encodeURIComponent(hostId)+'/reservations'+(editing?'/'+encodeURIComponent(editing.id):'');
+  await request(url,{method:editing?'PATCH':'POST',body:JSON.stringify({roomId:el('room').value,checkIn:el('checkIn').value,checkOut:el('checkOut').value,status:el('status').value,...(editing?{version:editing.version}:{})})});
+  resetEdit();notice('예약을 저장했습니다.');await refresh();
  }catch(e){notice(e.message==='RESERVATION_CONFLICT'?'동일 객실에 중복 예약이 있습니다.':'예약 실패: '+e.message)}
 });
+el('cancelEdit').addEventListener('click',()=>{resetEdit();notice('수정을 취소했습니다.');});
 el('logout').addEventListener('click',async()=>{try{await request('/api/auth/sign-out',{method:'POST',body:'{}'})}catch{}context={hosts:[],properties:[],rooms:[]};display(false);notice('로그아웃했습니다.')});
 void load();
 </script></body></html>
