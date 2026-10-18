@@ -1,6 +1,7 @@
 // Vercel catch-all Better Auth route. Do not deploy until account schema and secrets verified.
 import { auth } from '../../auth.config.mjs';
 export default async function handler(req,res) {
+  if(process.env.STAYBLOCK_BETA_AUTH_ENABLED!=='true') return res.status(503).json({error:'BETA_AUTH_DISABLED'});
   // Deny unaudited signup at app perimeter too.
   if (req.url?.includes('/sign-up')) { res.status(403).json({error:'INVITE_ONLY'}); return; }
   const proto = req.headers['x-forwarded-proto'] === 'https' ? 'https' : null;
