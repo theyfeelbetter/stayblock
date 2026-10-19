@@ -7,7 +7,8 @@ body{margin:0}header{background:#fff;padding:20px clamp(16px,4vw,54px);border-bo
 main{max-width:1040px;margin:32px auto;padding:0 18px}.panel{background:#fff;border:1px solid #d1d0ed;border-radius:16px;padding:24px;margin:16px 0;box-shadow:0 4px 15px #29275008}h1{font-size:1.5rem}h2{font-size:1.1rem}
 label{display:block;font-size:.88rem;margin:12px 0 5px}input,select,button{font:inherit;border-radius:9px;padding:11px;border:1px solid #bbb9d9}input,select{width:100%;background:#fff;color:#292750}button{background:#434180;color:#fff;border:0;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#d1d0ed;color:#292750}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:11px;text-align:left;border-bottom:1px solid #eee}#notice{min-height:22px;color:#a53232}small{color:#676587}.hidden{display:none!important}@media(max-width:650px){.panel{padding:15px}table{font-size:.76rem}}
-</style><link rel="stylesheet" href="ui/v3-unified.css">
+
+.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.calendar-toolbar button{padding:7px 12px}.calendar-title{font-weight:700}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:12px}.calendar-head{text-align:center;font-size:.8rem;padding:9px 0;background:#eeeefa}.calendar-day{min-height:85px;background:#fafaff;border:1px solid #e1e1ef;padding:6px;overflow:hidden}.calendar-day.off{opacity:.4}.calendar-day.today{outline:2px solid #5550ad}.calendar-date{font-size:.8rem;color:#585574}.calendar-event{margin-top:4px;padding:3px 4px;border-radius:4px;background:#d9e8fc;color:#283962;font-size:.71rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.calendar-event.pending{background:#fff1c9;color:#6d510c}.calendar-event.cancelled{background:#eee;color:#666;text-decoration:line-through}@media(max-width:650px){.calendar-day{min-height:62px;padding:3px}.calendar-event{font-size:.58rem}.calendar-head{font-size:.7rem}}</style><link rel="stylesheet" href="ui/v3-unified.css">
 </head>
 <body><header><strong>StayBlock <small>PRIVATE BETA</small></strong><button id="logout" class="secondary hidden">로그아웃</button></header>
 <main><h1>호스트 예약 관리</h1><p id="notice" role="status"></p>
@@ -15,6 +16,7 @@ label{display:block;font-size:.88rem;margin:12px 0 5px}input,select,button{font:
 <div id="appPanel" class="hidden">
 <section class="panel"><h2>숙소 선택</h2><div class="grid"><div><label for="host">호스트</label><select id="host"></select></div><div><label for="room">객실</label><select id="room"></select></div></div></section>
 <section class="panel"><h2>예약 등록</h2><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit" id="submitBooking">예약 저장</button> <button type="button" class="secondary" id="cancelEdit">수정 취소</button></p></form></section>
+<section class="panel"><div class="calendar-toolbar"><h2>월간 예약 달력 <small>조회 전용 · 직접 등록된 예약</small></h2><div class="actions"><button type="button" class="secondary" id="calPrev" aria-label="이전 달">←</button><span class="calendar-title" id="calTitle"></span><button type="button" class="secondary" id="calNext" aria-label="다음 달">→</button></div></div><div id="calendarGrid" class="calendar-grid" aria-label="월간 예약 달력"></div><small>체크아웃 날짜는 점유일에 포함하지 않습니다. OTA 예약은 아직 자동 연동되지 않습니다.</small></section>
 <section class="panel"><div class="actions"><h2>예약 목록</h2><button type="button" id="refresh" class="secondary">새로고침</button></div><div style="overflow-x:auto"><table><thead><tr><th>체크인</th><th>체크아웃</th><th>객실</th><th>상태</th><th>관리</th></tr></thead><tbody id="bookings"></tbody></table></div></section>
 </div></main><script type="module">
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
@@ -33,6 +35,31 @@ function display(authed){
  el('logout').classList.toggle('hidden',!authed);
 }
 const option=(value,title)=>new Option(title,value);
+
+let calendarMonth=new Date(); calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
+let calendarBookings=[];
+const isoLocal=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+function renderCalendar(){
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ el('calTitle').textContent=y+'년 '+(m+1)+'월';
+ const grid=el('calendarGrid');grid.replaceChildren();
+ for(const day of ['일','월','화','수','목','금','토']){const c=document.createElement('div');c.className='calendar-head';c.textContent=day;grid.append(c)}
+ const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),cells=Math.ceil((first.getDay()+days)/7)*7;
+ for(let i=0;i<cells;i++){
+  const date=new Date(y,m,1-first.getDay()+i),dateStr=isoLocal(date);
+  const cell=document.createElement('div');cell.className='calendar-day'+(date.getMonth()!==m?' off':'')+(dateStr===isoLocal(new Date())?' today':'');
+  const label=document.createElement('div');label.className='calendar-date';label.textContent=date.getDate();cell.append(label);
+  for(const booking of calendarBookings.filter(b=>String(b.check_in).slice(0,10)<=dateStr&&dateStr<String(b.check_out).slice(0,10))){
+   const item=document.createElement('div');item.className='calendar-event '+booking.status;
+   const room=context.rooms.find(r=>r.id===booking.room_id);
+   item.textContent=(room?.name||'객실')+' · '+(booking.status==='cancelled'?'취소':booking.status==='pending'?'대기':'예약');
+   item.title=String(booking.check_in).slice(0,10)+' ~ '+String(booking.check_out).slice(0,10);cell.append(item);
+  }grid.append(cell);
+ }
+}
+el('calPrev').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);renderCalendar()});
+el('calNext').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);renderCalendar()});
+
 function hostChanged(){
  resetEdit();
  const hostId=el('host').value;
@@ -51,7 +78,7 @@ async function refresh(){
  const hostId=el('host').value;if(!hostId)return;
  try{
   const rows=(await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations')).reservations||[];
-  const tbody=el('bookings');tbody.replaceChildren();
+  calendarBookings=rows;renderCalendar();const tbody=el('bookings');tbody.replaceChildren();
   for(const r of rows){
     const tr=document.createElement('tr');
     const room=context.rooms.find(x=>x.id===r.room_id);
