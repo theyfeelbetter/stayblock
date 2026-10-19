@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//StayBlock//Synthetic OTA Test//EN
+BEGIN:VEVENT
+UID:airbnb-test-001@stayblock.invalid
+DTSTART;VALUE=DATE:20261120
+DTEND;VALUE=DATE:20261123
+SUMMARY:Airbnb synthetic blocked dates
+END:VEVENT
+BEGIN:VEVENT
+UID:booking-test-002@stayblock.invalid
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261129
+SUMMARY:Booking synthetic blocked dates
+END:VEVENT
+END:VCALENDAR
