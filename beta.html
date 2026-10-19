@@ -29,6 +29,41 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 .sidebar-fold-body small{font-size:.76rem}.sidebar-fold-body table{font-size:.74rem}
 @media(max-width:950px){main{padding:0 15px}.workspace{grid-template-columns:minmax(0,1fr) 260px;gap:12px}.workspace-main>.panel{padding:14px}.calendar-day{min-height:74px}}
 @media(max-width:720px){.workspace{display:flex;flex-direction:column}.workspace-main{width:100%}.workspace-sidebar{width:100%;position:static;max-height:none;order:2}.workspace-heading{flex-wrap:wrap}.workspace-caption{display:none}.calendar-day{min-height:65px}}
+
+/* Mobile-only: compact bottom quick actions and high-contrast purple sheet */
+.mobile-dock,.mobile-shade,.mobile-quick{display:none}
+@media(max-width:720px){
+ body{background:#f5f7fc}header{padding:13px 16px}main{margin:12px auto;padding:0 10px 104px}
+ main>h1{font-size:1.13rem;margin:9px 2px}
+ .workspace-heading{margin:4px 2px 11px}.workspace-heading h2{font-size:1.08rem}
+ .workspace-heading p{font-size:.78rem}
+ .workspace-main>.panel{padding:11px;margin:9px 0 13px;border-radius:15px}
+ .calendar-toolbar h2{font-size:.95rem;margin:0}.calendar-toolbar h2 small{display:block;font-size:.65rem;font-weight:400;margin-top:5px}
+ .calendar-grid{gap:3px}.calendar-head{padding:7px 0;border-radius:7px;color:#434180}
+ .calendar-day{border:1px solid #e3e1f1;background:#faf9ff;border-radius:10px;min-height:74px;padding:4px 2px}
+ .calendar-day.today{background:#434180;outline:none;border-color:#434180}
+ .calendar-day.today .calendar-date{color:#fff;font-weight:800}
+ .calendar-day.today .calendar-event{background:#efeff9;color:#292750}
+ .calendar-date{text-align:center;font-size:.78rem;font-weight:650}
+ .calendar-event{white-space:normal;line-height:1.15;font-size:.58rem;padding:3px;border-radius:5px}
+ .workspace-main table{font-size:.73rem}.workspace-main td,.workspace-main th{padding:9px 5px}
+ .workspace-sidebar{display:none}
+ .workspace-sidebar.mobile-editing{display:block!important;position:fixed;inset:0;z-index:110;overflow-y:auto;background:#f5f7fc;max-height:none;padding:66px 14px 30px}
+ .workspace-sidebar.mobile-editing .sidebar-intro{display:none}
+ .workspace-sidebar.mobile-editing .sidebar-fold{display:none}
+ .workspace-sidebar.mobile-editing .sidebar-fold.mobile-target{display:block}
+ .mobile-edit-close{position:fixed;z-index:111;top:14px;right:16px;background:#434180;color:white}
+ .mobile-dock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:fixed;z-index:70;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:12px;right:12px;gap:5px;background:#292750;border:1px solid #56538b;border-radius:20px;padding:7px;box-shadow:0 12px 35px #29275055}
+ .mobile-dock button{background:transparent;color:#f7f7ff;padding:13px 3px;border-radius:13px;font-size:.79rem;font-weight:650}
+ .mobile-dock button:focus-visible{outline:2px solid #fff}
+ .mobile-shade:not([hidden]){display:block;position:fixed;inset:0;z-index:79;background:#29275088}
+ .mobile-quick:not([hidden]){display:block;position:fixed;z-index:80;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:#292750;color:#fff;border:1px solid #676398;border-radius:21px;padding:16px 18px 18px;box-shadow:0 14px 44px #29275055}
+ .quick-grip{height:4px;width:38px;background:#b6b2d7;border-radius:6px;margin:0 auto 12px}
+ .quick-heading{display:flex;justify-content:space-between;align-items:center}
+ .quick-heading strong{font-size:1rem}.quick-heading button{background:#55518b;color:white;font-size:1.2rem;line-height:1;padding:7px 11px}
+ #quickDescription{color:#e7e5f8;font-size:.85rem;line-height:1.5;margin:13px 0}
+ #quickDetail{width:100%;background:#f2f1ff;color:#292750;font-weight:700;padding:12px}
+}
 </style><link rel="stylesheet" href="ui/v3-unified.css">
 </head>
 <body><header><strong>StayBlock <small>PRIVATE BETA</small></strong><button id="logout" class="secondary hidden">로그아웃</button></header>
@@ -50,7 +85,10 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 <details class="sidebar-fold" id="foldOta"><summary><span class="sidebar-index">03</span><span>OTA iCal 등록·검사</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>OTA iCal 주소 검사 <small>링크 입력 · 미리보기</small></h2><p><small>Airbnb·Booking.com에서 복사한 캘린더 내보내기 URL을 붙여넣으세요. StayBlock 서버가 일정을 읽고 충돌만 확인합니다. URL 비공개 저장과 수동 동기화를 지원합니다. 정기 자동 동기화는 아직 제공하지 않습니다.</small></p><div class="grid"><div><label for="icsSource">OTA 플랫폼</label><select id="icsSource"><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option></select></div><div><label for="icsUrl">OTA iCal URL</label><input id="icsUrl" type="password" autocomplete="off" spellcheck="false" placeholder="https://…"></div><div><label for="icsRoom">대상 객실</label><select id="icsRoom"></select></div></div><p class="actions"><button id="icsCheck" type="button">URL로 일정 검사</button><button id="icsSave" type="button" class="secondary">비공개 URL 저장</button><button id="icsList" type="button" class="secondary">저장 목록 새로고침</button></p><div id="savedFeeds"></div><p id="icsSummary" role="status"></p><div id="icsResults" style="overflow-x:auto"></div></div></details>
 </aside>
 </div>
-</div></main><script type="module">
+</div><nav class="mobile-dock" aria-label="빠른 관리"><button type="button" data-quick="foldProperty">숙소 선택</button><button type="button" data-quick="foldBooking">예약 등록</button><button type="button" data-quick="foldOta">OTA 관리</button></nav>
+<div id="mobileShade" class="mobile-shade" hidden></div>
+<section id="mobileQuick" class="mobile-quick" role="dialog" aria-modal="true" aria-labelledby="quickTitle" hidden><div class="quick-grip"></div><div class="quick-heading"><strong id="quickTitle">빠른 관리</strong><button id="quickClose" type="button" aria-label="닫기">×</button></div><p id="quickDescription"></p><button id="quickDetail" type="button">상세 수정 열기 →</button></section>
+</main><script type="module">
 import {parseIcs,compareIcs} from "./ui/ical-preview.mjs";
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
 let context={hosts:[],properties:[],rooms:[]};
@@ -147,6 +185,33 @@ el('icsSave').addEventListener('click',async()=>{
   el('icsUrl').value='';el('icsSummary').textContent='OTA URL 암호화 저장 완료. 지금 동기화 버튼을 눌러주세요.';await loadSavedFeeds();
  }catch(e){el('icsSummary').textContent='URL 저장 실패: '+e.message}
 });
+
+const mobileSidebar=el('appPanel').querySelector('.workspace-sidebar');
+let quickTarget=null;
+const quickData={
+ foldProperty:{title:'숙소 선택',text:()=>{const host=el('host').selectedOptions[0]?.textContent||'미선택';const room=el('room').selectedOptions[0]?.textContent||'미선택';return '현재 호스트: '+host+' · 객실: '+room}},
+ foldBooking:{title:'예약 등록',text:()=>editing?'선택한 예약을 수정하고 있습니다.':'직접 예약을 등록하거나 기존 예약을 수정합니다.'},
+ foldOta:{title:'OTA iCal 등록·검사',text:()=> 'Airbnb·Booking.com URL을 비공개 저장하고, 수동 동기화 및 일정 충돌을 검사합니다.'}
+};
+function closeQuick(){el('mobileQuick').hidden=true;el('mobileShade').hidden=true;quickTarget=null}
+function openQuick(target){
+ const data=quickData[target];if(!data)return;quickTarget=target;el('quickTitle').textContent=data.title;el('quickDescription').textContent=data.text();
+ el('mobileQuick').hidden=false;el('mobileShade').hidden=false;el('quickDetail').focus();
+}
+function closeMobileEditor(){mobileSidebar.classList.remove('mobile-editing');mobileSidebar.querySelectorAll('.mobile-target').forEach(x=>x.classList.remove('mobile-target'));el('mobileEditClose')?.remove()}
+function openMobileEditor(target){
+ closeQuick();const fold=el(target);fold.open=true;
+ if(window.matchMedia('(max-width:720px)').matches){
+  closeMobileEditor();fold.classList.add('mobile-target');mobileSidebar.classList.add('mobile-editing');
+  const close=document.createElement('button');close.type='button';close.id='mobileEditClose';close.className='mobile-edit-close';close.textContent='← 달력으로';close.onclick=closeMobileEditor;
+  mobileSidebar.prepend(close);close.focus();
+ }else{fold.scrollIntoView({behavior:'smooth',block:'start'})}
+}
+document.querySelectorAll('[data-quick]').forEach(button=>button.addEventListener('click',()=>openQuick(button.dataset.quick)));
+el('quickClose').addEventListener('click',closeQuick);el('mobileShade').addEventListener('click',closeQuick);
+el('quickDetail').addEventListener('click',()=>openMobileEditor(quickTarget));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeQuick();closeMobileEditor()}});
+
 el('calPrev').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);renderCalendar()});
 el('calNext').addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);renderCalendar()});
 
@@ -182,7 +247,7 @@ async function refresh(){
     edit.addEventListener('click',()=>{
       editing={id:r.id,version:r.version};el('room').value=r.room_id;
       el('checkIn').value=String(r.check_in).slice(0,10);el('checkOut').value=String(r.check_out).slice(0,10);el('status').value=r.status;
-      el('submitBooking').textContent='변경 저장';notice('예약 수정 중');el('foldBooking').open=true;el('bookingForm').scrollIntoView({behavior:'smooth'});
+      el('submitBooking').textContent='변경 저장';notice('예약 수정 중');openMobileEditor('foldBooking');el('bookingForm').scrollIntoView({behavior:'smooth'});
     });td.append(edit);
     const button=document.createElement('button');button.className='secondary';button.textContent='삭제';
     button.addEventListener('click',async()=>{
