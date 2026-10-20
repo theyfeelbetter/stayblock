@@ -94,7 +94,9 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 </main><script type="module">
 import {parseIcs,compareIcs} from "./ui/ical-preview.mjs";
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
-function completed(message){notice(message);el('operationToast').textContent=message;el('operationToast').hidden=false;closeMobileEditor();closeQuick();window.scrollTo({top:0,behavior:'smooth'});}
+let completionTimer=null;
+function clearCompletion(){if(completionTimer!==null){clearTimeout(completionTimer);completionTimer=null}el('operationToast').hidden=true;el('notice').textContent=''}
+function completed(message){clearCompletion();notice(message);el('operationToast').textContent=message;el('operationToast').hidden=false;closeMobileEditor();closeQuick();window.scrollTo({top:0,behavior:'smooth'});completionTimer=setTimeout(clearCompletion,3000);}
 let context={hosts:[],properties:[],rooms:[]};
 let editing=null;
 function resetEdit(){editing=null;el('submitBooking').textContent='예약 저장';el('bookingForm').reset();}
@@ -182,12 +184,12 @@ const quickData={
 };
 function closeQuick(){el('mobileQuick').hidden=true;el('mobileShade').hidden=true;quickTarget=null}
 function openQuick(target){
- const data=quickData[target];if(!data)return;quickTarget=target;el('quickTitle').textContent=data.title;el('quickDescription').textContent=data.text();
+ clearCompletion();const data=quickData[target];if(!data)return;quickTarget=target;el('quickTitle').textContent=data.title;el('quickDescription').textContent=data.text();
  el('mobileQuick').hidden=false;el('mobileShade').hidden=false;el('quickDetail').focus();
 }
 function closeMobileEditor(){document.body.classList.remove("mobile-editor-active");mobileSidebar.classList.remove('mobile-editing');mobileSidebar.querySelectorAll('.mobile-target').forEach(x=>x.classList.remove('mobile-target'));el('mobileEditClose')?.remove()}
 function openMobileEditor(target){
- closeQuick();const fold=el(target);fold.open=true;
+ clearCompletion();closeQuick();const fold=el(target);fold.open=true;
  if(window.matchMedia('(max-width:720px)').matches){
   closeMobileEditor();fold.classList.add('mobile-target');mobileSidebar.classList.add('mobile-editing');document.body.classList.add('mobile-editor-active');
   const close=document.createElement('button');close.type='button';close.id='mobileEditClose';close.className='mobile-edit-close';close.textContent='← 달력으로';close.onclick=closeMobileEditor;
@@ -245,8 +247,8 @@ async function refresh(){
   }
  }catch(e){notice('예약 목록 조회 실패: '+e.message)}
 }
-el('host').addEventListener('change',hostChanged);
-el('refresh').addEventListener('click',refresh);
+el('host').addEventListener('change',()=>{clearCompletion();hostChanged()});
+el('refresh').addEventListener('click',()=>{clearCompletion();void refresh()});
 el('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();notice('로그인 확인 중...');
  try{await request('/api/auth/sign-in/email',{method:'POST',body:JSON.stringify({email:el('email').value,password:el('password').value})});el('password').value='';await load();}
