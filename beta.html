@@ -54,7 +54,7 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
  .workspace-sidebar.mobile-editing .sidebar-fold.mobile-target{display:block}
  .mobile-edit-close{position:fixed;z-index:111;top:calc(14px + env(safe-area-inset-top,0px));right:16px;background:#434180;color:white;min-height:44px}
  body.mobile-editor-active{overflow:hidden}body.mobile-editor-active .mobile-dock{display:none}
- .mobile-dock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:fixed;z-index:70;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:12px;right:12px;gap:5px;background:#292750;border:1px solid #56538b;border-radius:20px;padding:7px;box-shadow:0 12px 35px #29275055}
+ .mobile-dock{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));position:fixed;z-index:70;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:12px;right:12px;gap:5px;background:#292750;border:1px solid #56538b;border-radius:20px;padding:7px;box-shadow:0 12px 35px #29275055}
  .mobile-dock button{background:transparent;color:#f7f7ff;min-height:48px;padding:13px 3px;border-radius:13px;font-size:.79rem;font-weight:650}
  .mobile-dock button:focus-visible{outline:2px solid #fff}
  .mobile-shade:not([hidden]){display:block;position:fixed;inset:0;z-index:79;background:#29275088}
@@ -65,10 +65,12 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
  #quickDescription{color:#e7e5f8;font-size:.85rem;line-height:1.5;margin:13px 0}
  #quickDetail{width:100%;background:#f2f1ff;color:#292750;font-weight:700;padding:12px}
 }
+#operationToast:not([hidden]){position:fixed;z-index:130;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));width:max-content;max-width:calc(100% - 28px);background:#292750;color:white;border:1px solid #7770a9;box-shadow:0 9px 25px #29275044;padding:12px 18px;border-radius:14px;font-size:.87rem;text-align:center}
+.booking-property{padding-bottom:12px;border-bottom:1px solid #efeff6;margin-bottom:10px}
 </style><link rel="stylesheet" href="ui/v3-unified.css">
 </head>
 <body><header><strong>StayBlock <small>PRIVATE BETA</small></strong><button id="logout" class="secondary hidden">로그아웃</button></header>
-<main><h1>호스트 예약 관리</h1><p id="notice" role="status"></p>
+<main><h1>호스트 예약 관리</h1><p id="notice" role="status"></p><div id="operationToast" role="status" aria-live="polite" hidden></div>
 <section id="loginPanel" class="panel"><h2>호스트 로그인</h2><form id="loginForm"><div class="grid"><div><label for="email">이메일</label><input id="email" type="email" required autocomplete="username"></div><div><label for="password">비밀번호</label><input id="password" type="password" required autocomplete="current-password"></div></div><p><button type="submit">로그인</button></p></form><small>초대받은 호스트 전용입니다. 이 화면에서는 계정을 만들 수 없습니다.</small></section>
 <div id="appPanel" class="hidden">
 <div class="workspace">
@@ -81,17 +83,18 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 </div>
 <aside class="workspace-sidebar" aria-label="예약 관리 도구">
 <div class="sidebar-intro"><strong>관리 도구</strong><small>항목을 눌러 펼쳐주세요</small></div>
-<details class="sidebar-fold" id="foldProperty" open><summary><span class="sidebar-index">01</span><span>숙소 선택</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>숙소 선택</h2><div class="grid"><div><label for="host">호스트</label><select id="host"></select></div><div><label for="room">객실</label><select id="room"></select></div></div></div></details>
-<details class="sidebar-fold" id="foldBooking"><summary><span class="sidebar-index">02</span><span>예약 등록·수정</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>예약 등록</h2><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit" id="submitBooking">예약 저장</button> <button type="button" class="secondary" id="cancelEdit">수정 취소</button></p></form></div></details>
-<details class="sidebar-fold" id="foldOta"><summary><span class="sidebar-index">03</span><span>OTA iCal 등록·검사</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>OTA iCal 주소 검사 <small>링크 입력 · 미리보기</small></h2><p><small>Airbnb·Booking.com에서 복사한 캘린더 내보내기 URL을 붙여넣으세요. StayBlock 서버가 일정을 읽고 충돌만 확인합니다. URL 비공개 저장과 수동 동기화를 지원합니다. 정기 자동 동기화는 아직 제공하지 않습니다.</small></p><div class="grid"><div><label for="icsSource">OTA 플랫폼</label><select id="icsSource"><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option></select></div><div><label for="icsUrl">OTA iCal URL</label><input id="icsUrl" type="password" autocomplete="off" spellcheck="false" placeholder="https://…"></div><div><label for="icsRoom">대상 객실</label><select id="icsRoom"></select></div></div><p class="actions"><button id="icsCheck" type="button">URL로 일정 검사</button><button id="icsSave" type="button" class="secondary">비공개 URL 저장</button><button id="icsList" type="button" class="secondary">저장 목록 새로고침</button></p><div id="savedFeeds"></div><p id="icsSummary" role="status"></p><div id="icsResults" style="overflow-x:auto"></div></div></details>
+
+<details class="sidebar-fold" id="foldBooking"><summary><span class="sidebar-index">01</span><span>예약 등록·수정</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>예약 등록</h2><div class="booking-property"><div class="grid"><div><label for="host">호스트</label><select id="host"></select></div><div><label for="room">객실</label><select id="room"></select></div></div></div><form id="bookingForm"><div class="grid"><div><label for="checkIn">체크인</label><input type="date" id="checkIn" required></div><div><label for="checkOut">체크아웃</label><input type="date" id="checkOut" required></div><div><label for="status">상태</label><select id="status"><option value="confirmed">확정</option><option value="pending">대기</option><option value="cancelled">취소</option></select></div></div><p><button type="submit" id="submitBooking">예약 저장</button> <button type="button" class="secondary" id="cancelEdit">수정 취소</button></p></form></div></details>
+<details class="sidebar-fold" id="foldOta"><summary><span class="sidebar-index">02</span><span>OTA iCal 관리</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>OTA iCal 주소 검사 <small>링크 입력 · 미리보기</small></h2><p><small>Airbnb·Booking.com에서 복사한 캘린더 내보내기 URL을 붙여넣으세요. StayBlock 서버가 일정을 읽고 충돌만 확인합니다. URL 비공개 저장과 수동 동기화를 지원합니다. 정기 자동 동기화는 아직 제공하지 않습니다.</small></p><div class="grid"><div><label for="icsSource">OTA 플랫폼</label><select id="icsSource"><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option></select></div><div><label for="icsUrl">OTA iCal URL</label><input id="icsUrl" type="password" autocomplete="off" spellcheck="false" placeholder="https://…"></div><div><label for="icsRoom">대상 객실</label><select id="icsRoom"></select></div></div><p class="actions"><button id="icsSave" type="button" class="secondary">비공개 URL 저장</button><button id="icsList" type="button" class="secondary">저장 목록 새로고침</button></p><div id="savedFeeds"></div><p id="icsSummary" role="status"></p><div id="icsResults" style="overflow-x:auto"></div></div></details>
 </aside>
 </div>
-</div><nav class="mobile-dock" aria-label="빠른 관리"><button type="button" data-quick="foldProperty">숙소 선택</button><button type="button" data-quick="foldBooking">예약 등록</button><button type="button" data-quick="foldOta">OTA 관리</button></nav>
+</div><nav class="mobile-dock" aria-label="빠른 관리"><button type="button" data-quick="foldBooking">예약 등록·숙소 선택</button><button type="button" data-quick="foldOta">OTA 관리</button></nav>
 <div id="mobileShade" class="mobile-shade" hidden></div>
-<section id="mobileQuick" class="mobile-quick" role="dialog" aria-modal="true" aria-labelledby="quickTitle" hidden><div class="quick-grip"></div><div class="quick-heading"><strong id="quickTitle">빠른 관리</strong><button id="quickClose" type="button" aria-label="닫기">×</button></div><p id="quickDescription"></p><button id="quickDetail" type="button">상세 수정 열기 →</button></section>
+<section id="mobileQuick" class="mobile-quick" role="dialog" aria-modal="true" aria-labelledby="quickTitle" hidden><div class="quick-grip"></div><div class="quick-heading"><strong id="quickTitle">빠른 관리</strong><button id="quickClose" type="button" aria-label="닫기">×</button></div><p id="quickDescription"></p><button id="quickDetail" type="button">상세 관리 열기 →</button></section>
 </main><script type="module">
 import {parseIcs,compareIcs} from "./ui/ical-preview.mjs";
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
+function completed(message){notice(message);el('operationToast').textContent=message;el('operationToast').hidden=false;closeMobileEditor();closeQuick();window.scrollTo({top:0,behavior:'smooth'});}
 let context={hosts:[],properties:[],rooms:[]};
 let editing=null;
 function resetEdit(){editing=null;el('submitBooking').textContent='예약 저장';el('bookingForm').reset();}
@@ -138,23 +141,6 @@ function renderCalendar(){
  }
 }
 
-el('icsCheck').addEventListener('click',async()=>{
- const summary=el('icsSummary'),area=el('icsResults');area.replaceChildren();summary.textContent='OTA 캘린더 확인 중...';
- try{
-  const result=await request('/api/ota/preview',{method:'POST',body:JSON.stringify({url:el('icsUrl').value,hostId:el('host').value,roomId:el('icsRoom').value})});
-  const source=el('icsSource').value;
-  const key=[el('host').value,el('icsRoom').value,source].join('|');
-  otaPreview.set(key,result.events);
-  if(result.events.length){const first=result.events[0].start;const d=new Date(first+'T00:00:00');if(!Number.isNaN(+d))calendarMonth=new Date(d.getFullYear(),d.getMonth(),1)}
-  renderCalendar();
-  summary.textContent='예약/차단 '+result.count+'건 · 기존 예약 충돌 '+result.conflicts+'건 · 건너뜀 '+result.skipped+'건 (DB 반영 없음 · 달력 임시 표시)';
-  const table=document.createElement('table'),head=document.createElement('thead'),tr=document.createElement('tr');
-  for(const name of ['시작','종료(퇴실)','검사']){const th=document.createElement('th');th.textContent=name;tr.append(th)}head.append(tr);table.append(head);
-  const body=document.createElement('tbody');
-  for(const item of result.events){const row=document.createElement('tr');for(const value of [item.start,item.end,item.conflict?'충돌':'충돌 없음']){const cell=document.createElement('td');cell.textContent=value;row.append(cell)}body.append(row)}
-  table.append(body);area.append(table);
- }catch(error){summary.textContent='URL 검사 실패: '+error.message}
-});
 async function loadSavedFeeds(){
  const area=el('savedFeeds');area.replaceChildren();
  const hostId=el('host').value;if(!hostId)return;
@@ -190,8 +176,8 @@ el('icsSave').addEventListener('click',async()=>{
 const mobileSidebar=el('appPanel').querySelector('.workspace-sidebar');
 let quickTarget=null;
 const quickData={
- foldProperty:{title:'숙소 선택',text:()=>{const host=el('host').selectedOptions[0]?.textContent||'미선택';const room=el('room').selectedOptions[0]?.textContent||'미선택';return '현재 호스트: '+host+' · 객실: '+room}},
- foldBooking:{title:'예약 등록',text:()=>editing?'선택한 예약을 수정하고 있습니다.':'직접 예약을 등록하거나 기존 예약을 수정합니다.'},
+
+ foldBooking:{title:'예약 등록·숙소 선택',text:()=>editing?'선택한 예약을 수정하고 있습니다.':'숙소와 객실을 선택한 후 예약을 등록하거나 수정합니다.'},
  foldOta:{title:'OTA iCal 등록·검사',text:()=> 'Airbnb·Booking.com URL을 비공개 저장하고, 수동 동기화 및 일정 충돌을 검사합니다.'}
 };
 function closeQuick(){el('mobileQuick').hidden=true;el('mobileShade').hidden=true;quickTarget=null}
@@ -254,7 +240,7 @@ async function refresh(){
     const button=document.createElement('button');button.className='secondary';button.textContent='삭제';
     button.addEventListener('click',async()=>{
       if(!confirm('이 예약을 삭제하시겠습니까?'))return;
-      try{await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations/'+encodeURIComponent(r.id),{method:'DELETE'});notice('삭제했습니다.');await refresh()}catch(e){notice(e.message)}
+      try{await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations/'+encodeURIComponent(r.id),{method:'DELETE'});await refresh();completed('예약 삭제가 완료되었습니다.')}catch(e){notice(e.message)}
     });td.append(button);tr.append(td);tbody.append(tr);
   }
  }catch(e){notice('예약 목록 조회 실패: '+e.message)}
@@ -272,10 +258,10 @@ el('bookingForm').addEventListener('submit',async e=>{
  try{
   const url='/api/hosts/'+encodeURIComponent(hostId)+'/reservations'+(editing?'/'+encodeURIComponent(editing.id):'');
   await request(url,{method:editing?'PATCH':'POST',body:JSON.stringify({roomId:el('room').value,checkIn:el('checkIn').value,checkOut:el('checkOut').value,status:el('status').value,...(editing?{version:editing.version}:{})})});
-  resetEdit();notice('예약을 저장했습니다.');await refresh();
+  const wasEditing=!!editing;resetEdit();await refresh();completed(wasEditing?'예약 수정이 완료되었습니다.':'예약 등록이 완료되었습니다.');
  }catch(e){notice(e.message==='RESERVATION_CONFLICT'?'동일 객실에 중복 예약이 있습니다.':'예약 실패: '+e.message)}
 });
 el('cancelEdit').addEventListener('click',()=>{resetEdit();notice('수정을 취소했습니다.');});
-el('logout').addEventListener('click',async()=>{try{await request('/api/auth/sign-out',{method:'POST',body:'{}'})}catch{}context={hosts:[],properties:[],rooms:[]};display(false);notice('로그아웃했습니다.')});
+el('logout').addEventListener('click',async()=>{el('operationToast').hidden=true;try{await request('/api/auth/sign-out',{method:'POST',body:'{}'})}catch{}context={hosts:[],properties:[],rooms:[]};display(false);notice('로그아웃했습니다.')});
 void load();
 </script></body></html>
