@@ -54,11 +54,11 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
  .workspace-sidebar.mobile-editing .sidebar-fold.mobile-target{display:block}
  .mobile-edit-close{position:fixed;z-index:111;top:calc(14px + env(safe-area-inset-top,0px));right:16px;background:#434180;color:white;min-height:44px}
  body.mobile-editor-active{overflow:hidden}body.mobile-editor-active .mobile-dock{display:none}
- .mobile-dock{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));position:fixed;z-index:70;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:12px;right:12px;gap:5px;background:#292750;border:1px solid #56538b;border-radius:20px;padding:7px;box-shadow:0 12px 35px #29275055}
- .mobile-dock button{background:transparent;color:#f7f7ff;min-height:48px;padding:13px 3px;border-radius:13px;font-size:.79rem;font-weight:650}
+ .mobile-dock{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);position:fixed;z-index:70;bottom:calc(8px + env(safe-area-inset-bottom,0px));left:10px;right:10px;gap:4px;background:#292750;border:1px solid #56538b;border-radius:15px;padding:4px;box-shadow:0 8px 24px #29275044}
+ .mobile-dock button{display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;background:transparent;color:#f7f7ff;min-height:44px;padding:8px 5px;border-radius:10px;font-size:clamp(.69rem,2.8vw,.8rem);font-weight:650}.mobile-dock button .dock-icon{display:inline-flex;align-items:center;justify-content:center;flex:none;width:19px;height:19px;font-size:1.05rem;line-height:1;color:#e9e6ff}
  .mobile-dock button:focus-visible{outline:2px solid #fff}
  .mobile-shade:not([hidden]){display:block;position:fixed;inset:0;z-index:79;background:#29275088}
- .mobile-quick:not([hidden]){display:block;position:fixed;z-index:80;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:#292750;color:#fff;border:1px solid #676398;border-radius:21px;padding:16px 18px 18px;box-shadow:0 14px 44px #29275055}
+ .mobile-quick:not([hidden]){display:block;position:fixed;z-index:80;left:12px;right:12px;bottom:calc(68px + env(safe-area-inset-bottom,0px));background:#292750;color:#fff;border:1px solid #676398;border-radius:21px;padding:16px 18px 18px;box-shadow:0 14px 44px #29275055}
  .quick-grip{height:4px;width:38px;background:#b6b2d7;border-radius:6px;margin:0 auto 12px}
  .quick-heading{display:flex;justify-content:space-between;align-items:center}
  .quick-heading strong{font-size:1rem}.quick-heading button{background:#55518b;color:white;font-size:1.2rem;line-height:1;min-width:44px;min-height:44px;padding:7px 11px}
@@ -88,7 +88,7 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 <details class="sidebar-fold" id="foldOta"><summary><span class="sidebar-index">02</span><span>OTA iCal 관리</span><span class="fold-chevron">⌄</span></summary><div class="sidebar-fold-body"><h2>OTA iCal 주소 검사 <small>링크 입력 · 미리보기</small></h2><p><small>Airbnb·Booking.com에서 복사한 캘린더 내보내기 URL을 붙여넣으세요. StayBlock 서버가 일정을 읽고 충돌만 확인합니다. URL 비공개 저장과 수동 동기화를 지원합니다. 정기 자동 동기화는 아직 제공하지 않습니다.</small></p><div class="grid"><div><label for="icsSource">OTA 플랫폼</label><select id="icsSource"><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option></select></div><div><label for="icsUrl">OTA iCal URL</label><input id="icsUrl" type="password" autocomplete="off" spellcheck="false" placeholder="https://…"></div><div><label for="icsRoom">대상 객실</label><select id="icsRoom"></select></div></div><p class="actions"><button id="icsSave" type="button" class="secondary">비공개 URL 저장</button><button id="icsList" type="button" class="secondary">저장 목록 새로고침</button></p><div id="savedFeeds"></div><p id="icsSummary" role="status"></p><div id="icsResults" style="overflow-x:auto"></div></div></details>
 </aside>
 </div>
-</div><nav class="mobile-dock" aria-label="빠른 관리"><button type="button" data-quick="foldBooking">예약 등록·숙소 선택</button><button type="button" data-quick="foldOta">OTA 관리</button></nav>
+</div><nav class="mobile-dock" aria-label="빠른 관리"><button type="button" data-quick="foldBooking"><span class="dock-icon" aria-hidden="true">＋</span><span>예약 등록·숙소 선택</span></button><button type="button" data-quick="foldOta"><span class="dock-icon" aria-hidden="true">↻</span><span>OTA 관리</span></button></nav>
 <div id="mobileShade" class="mobile-shade" hidden></div>
 <section id="mobileQuick" class="mobile-quick" role="dialog" aria-modal="true" aria-labelledby="quickTitle" hidden><div class="quick-grip"></div><div class="quick-heading"><strong id="quickTitle">빠른 관리</strong><button id="quickClose" type="button" aria-label="닫기">×</button></div><p id="quickDescription"></p><button id="quickDetail" type="button">상세 관리 열기 →</button></section>
 </main><script type="module">
