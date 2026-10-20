@@ -7,11 +7,11 @@ test('Hybrid mobile viewport respects notches and safe areas',()=>{
  assert.match(html,/env\(safe-area-inset-bottom/);
  assert.match(html,/100dvh/);
 });
-test('Mobile tools remain booking, properties, OTA only',()=>{
+test('Mobile quick actions combine property selection with booking and retain OTA',()=>{
  const dock=html.match(/<nav class="mobile-dock"[\s\S]*?<\/nav>/)?.[0];
  assert.ok(dock,'mobile action dock exists');
- for(const id of ['foldProperty','foldBooking','foldOta'])assert.ok(dock.includes('data-quick="'+id+'"'));
- assert.equal((dock.match(/data-quick=/g)||[]).length,3);
+ for(const id of ['foldBooking','foldOta'])assert.ok(dock.includes('data-quick="'+id+'"'));
+ assert.equal((dock.match(/data-quick=/g)||[]).length,2);
 });
 test('Mobile calendar and reservations precede management sidebar',()=>{
  const calendar=html.indexOf('id="calendarGrid"');
@@ -24,6 +24,8 @@ test('Drill-down edits use the same desktop form, no second reservation form',()
  assert.equal((html.match(/id="icsSave"/g)||[]).length,1);
  assert.match(html,/function openMobileEditor/);
  assert.match(html,/openMobileEditor\('foldBooking'\)/);
+ assert.doesNotMatch(html,/id="icsCheck"/);
+ assert.match(html,/function completed\(message\)/);
 });
 test('The embedded module script parses as JavaScript',async()=>{
  const js=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
