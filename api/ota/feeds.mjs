@@ -71,8 +71,8 @@ export default async function handler(req,res){
   const delta=await withVerifiedDbSession({auth,pool,headers:new Headers(req.headers),work:async db=>{
    const locked=await db.query('SELECT id FROM stayblock.ota_feeds WHERE id=$1 AND host_id=$2 FOR UPDATE',[feedId,hostId]);
    if(locked.rowCount!==1)throw Error('FEED_REMOVED');
-   const saved=await db.query('SELECT uid_hash,check_in,check_out,missing_since FROM stayblock.ota_events WHERE feed_id=$1 AND host_id=$2',[feedId,hostId]);
-   const previous=saved.rows.filter(x=>!x.missing_since).map(x=>({uid:x.uid_hash,start:String(x.check_in).slice(0,10),end:String(x.check_out).slice(0,10)}));
+   const saved=await db.query('SELECT uid_hash,check_in::text AS check_in,check_out::text AS check_out,missing_since FROM stayblock.ota_events WHERE feed_id=$1 AND host_id=$2',[feedId,hostId]);
+   const previous=saved.rows.filter(x=>!x.missing_since).map(x=>({uid:x.uid_hash,start:x.check_in,end:x.check_out}));
    const current=Array.from(unique.values());
    const changes=diffOtaEvents(previous,current);
    for(const e of current){
