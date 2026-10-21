@@ -158,7 +158,7 @@ async function loadSavedFeeds(){
     try{const result=await request('/api/ota/feeds',{method:'PUT',body:JSON.stringify({hostId,feedId:feed.id})});
      otaPreview.set([hostId,result.roomId,result.provider].join('|'),result.events);
      if(result.events.length){const d=new Date(result.events[0].start+'T00:00:00');if(!Number.isNaN(+d))calendarMonth=new Date(d.getFullYear(),d.getMonth(),1)}
-     renderCalendar();await refresh();el('icsSummary').textContent='동기화 조회 '+result.count+'건 · 충돌 '+result.conflicts+'건 (DB 예약 반영 없음)';await loadSavedFeeds();
+     renderCalendar();await refresh();el('icsSummary').textContent='동기화 '+result.count+'건 · 신규 '+(result.delta?.added??0)+'건 · 날짜변경 '+(result.delta?.changed??0)+'건 · 누락후보 '+(result.delta?.missingCandidates??0)+'건 · 충돌 '+result.conflicts+'건 (OTA 일정만 저장, 직접 예약 변경 없음)';await loadSavedFeeds();
     }catch(e){el('icsSummary').textContent='동기화 실패: '+e.message}finally{run.disabled=false}
    };line.append(run);
    const remove=document.createElement('button');remove.className='secondary';remove.textContent='연결 삭제';remove.onclick=async()=>{
