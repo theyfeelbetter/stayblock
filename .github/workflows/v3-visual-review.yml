@@ -1,0 +1,53 @@
+name: V3 visual screenshot review
+on:
+  pull_request:
+    paths:
+      - 'ui/v3-unified.css'
+      - 'index.html'
+      - 'app.html'
+      - 'pricing.html'
+      - 'invite.html'
+      - 'beta.html'
+      - '.github/workflows/v3-visual-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated browser testing
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Capture all pages with no backend or external deployment
+        run: |
+          python - <<'PY'
+          import os,threading,http.server,socketserver
+          from playwright.sync_api import sync_playwright
+          os.makedirs('v3-screenshots',exist_ok=True)
+          class Server(socketserver.TCPServer):allow_reuse_address=True
+          server=Server(('127.0.0.1',8765),http.server.SimpleHTTPRequestHandler)
+          threading.Thread(target=server.serve_forever,daemon=True).start()
+          with sync_playwright() as pw:
+              browser=pw.chromium.launch(headless=True)
+              for page_name in ['index','app','pricing','invite','beta']:
+                  for size,w,h in [('desktop',1440,900),('mobile',390,844)]:
+                      p=browser.new_page(viewport={'width':w,'height':h},device_scale_factor=1)
+                      p.goto('http://127.0.0.1:8765/'+page_name+'.html',wait_until='domcontentloaded',timeout=20000)
+                      p.wait_for_timeout(800)
+                      p.screenshot(path=f'v3-screenshots/{page_name}-{size}.png',full_page=(page_name!='app'),animations='disabled')
+                      p.close()
+              browser.close()
+          server.shutdown()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stayblock-v3-page-screenshots
+          path: v3-screenshots/*.png
+          retention-days: 14

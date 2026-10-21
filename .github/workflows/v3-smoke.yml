@@ -1,0 +1,47 @@
+name: V3 static smoke
+on:
+  pull_request:
+    paths:
+      - 'app.html'
+      - 'ui/**'
+      - 'tests/v3-static-smoke.test.cjs'
+      - 'tests/v3-calendar-date.test.cjs'
+      - 'tests/v3-reservation-conflicts.test.cjs'
+      - 'tests/neon-config.test.cjs'
+      - 'tests/verified-db-session.test.cjs'
+      - 'bff/verified-db-session.cjs'
+      - 'bff/beta-reservations.cjs'
+      - 'auth.config.mjs'
+      - 'api/**'
+      - 'package.json'
+      - 'tests/beta-routes.test.cjs'
+      - 'bff/deployment-readiness.cjs'
+      - 'tests/deployment-readiness.test.cjs'
+      - 'tests/beta-route-guard.test.cjs'
+      - 'tests/beta-ui-contract.test.cjs'
+      - 'tests/v3-all-pages.test.cjs'
+      - 'scripts/provision-three-beta-hosts.mjs'
+      - 'ui/v3-unified.css'
+      - 'index.html'
+      - 'app.html'
+      - 'pricing.html'
+      - 'invite.html'
+      - 'beta.html'
+      - 'api/me.mjs'
+      - 'bff/host-context.cjs'
+      - 'db/neon/**'
+      - 'bff/neon-config.cjs'
+      - '.github/workflows/v3-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/provision-three-beta-hosts.mjs
+          node --test tests/v3-static-smoke.test.cjs tests/v3-calendar-date.test.cjs tests/v3-reservation-conflicts.test.cjs tests/neon-config.test.cjs tests/verified-db-session.test.cjs tests/beta-routes.test.cjs tests/deployment-readiness.test.cjs tests/beta-route-guard.test.cjs tests/beta-ui-contract.test.cjs tests/v3-all-pages.test.cjs

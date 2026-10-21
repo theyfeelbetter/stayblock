@@ -490,7 +490,15 @@ textarea{resize:vertical;min-height:56px}
 .mp-stat-lbl{font-size:10px;color:var(--ink3);letter-spacing:.04em}
 .mp-danger-btn{padding:8px 14px;border:1px solid var(--border);border-radius:var(--r);background:none;font-size:12px;cursor:pointer;color:var(--ink3);transition:all .15s}
 .mp-danger-btn:hover{background:var(--red2);border-color:var(--red);color:var(--red)}
+
+/* V3 visual-only app port; no changes to booking/auth/localStorage behavior. */
+:root{--ink:#292750;--ink2:#434180;--ink3:#727895;--paper:#f5f7fc;--paper2:#eef0f9;--paper3:#dfe3f0;--white:#ffffff;--accent:#434180;--accent2:#6967a3;--green:#335c48;--green2:#e6f3ec;--amber:#87576a;--amber2:#fff0f3;--red:#813d50;--red2:#fff0f3;--blue:#434f89;--blue2:#e7edfc;--border:#dfe3f0;--border2:#cdd2e5;--r:12px;--rl:20px;--sh:0 3px 15px rgba(46,52,103,.045);--sh2:0 12px 30px rgba(46,52,103,.08)}
+body{background:#f5f7fc;color:#292750}button,input,select,textarea{border-radius:10px}button{min-height:35px}.hd{background:#fff!important;color:#292750!important;border-bottom:1px solid #dfe3f0!important}.logo{color:#292750!important;font-weight:800}.logo span{color:#434180!important}.betabg{background:#e7e6f6!important;color:#434180!important}.hd .btn-g{color:#434180!important;background:#eef0f9!important;border:1px solid #dfe3f0!important}.hd .btn-p{background:#ffb8ba!important;color:#292750!important;border-radius:12px!important}.hd .ind-pill{color:#434180!important;background:#eef0f9!important;border-color:#dfe3f0!important}.sidebar{background:#fff!important;border-right:1px solid #dfe3f0!important}.main{background:#f5f7fc!important}.scard{background:#fff!important;border:1px solid #dfe3f0!important;border-radius:18px!important;box-shadow:0 8px 25px rgba(46,52,103,.045)}.stabs{background:#f0f1f9!important}.stab.on{background:#e0dff4!important;color:#343370!important}.expdd,.user-dd{background:#fff!important;color:#292750!important;border-color:#dfe3f0!important;border-radius:16px!important}.expdd button,.user-dd button{color:#292750!important}.modal,.mo,.modal-content{border-radius:20px}.rsearch{background:#f5f7fc!important;border-color:#dfe3f0!important;color:#292750!important}.layout{background:#f5f7fc}.btn-p:focus-visible,.btn-g:focus-visible,.stab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #ce5d7b;outline-offset:2px}
+@media(max-width:680px){.hd{gap:6px!important}.hd-r{gap:4px!important}.sidebar{background:#fff!important}.layout{min-height:calc(100dvh - 48px)}.main,.sidebar{min-width:0}.hd .btn-g{font-size:11px!important}.hd .btn-p{font-size:11px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
+<link rel="stylesheet" href="ui/v3-unified.css">
+</head>
 <body>
 <div id="pra"></div>
 <!-- APP HEADER with user menu -->
@@ -1230,7 +1238,7 @@ function load(){
 }
 function seed(){
   const y=new Date().getFullYear(),m=new Date().getMonth();
-  const fd=d=>new Date(y,m,d).toISOString().split('T')[0];
+  const fd=d=>[new Date(y,m,d).getFullYear(),String(new Date(y,m,d).getMonth()+1).padStart(2,'0'),String(new Date(y,m,d).getDate()).padStart(2,'0')].join('-');
   reservations=[
     {id:1,name:'김지현',nameEn:'Jihyeon Kim',room:'객실 A (온돌)',status:'confirmed',cin:fd(2),cout:fd(5),cinT:'',coutT:'',guests:2,country:'KR',channel:'에어비앤비',amount:360000,memo:'조식 필요',color:'sage',sticker:'🌸'},
     {id:2,name:'박서준',nameEn:'Seojun Park',room:'객실 B (마루)',status:'confirmed',cin:fd(7),cout:fd(10),cinT:'',coutT:'',guests:3,country:'KR',channel:'직접예약',amount:420000,memo:'',color:'sky',sticker:''},
@@ -1244,7 +1252,7 @@ function seed(){
 }
 
 /* ═══════════ HELPERS ═══════════ */
-const fmtD=d=>d.toISOString().split('T')[0];
+const fmtD=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const toStr=()=>fmtD(new Date());
 const money=n=>'₩'+Number(n).toLocaleString('ko-KR');
 const getCol=id=>BLOCK_COLORS.find(c=>c.id===id)||BLOCK_COLORS[0];
@@ -1529,6 +1537,12 @@ function openEditMo(id){
   buildColPicker(pColor);buildStPicker(pSticker);buildChPicker(pChannel);
   document.getElementById('moAdd').classList.add('open');
 }
+// UI-side early warning only: authoritative conflicts MUST be checked atomically by the future DB/BFF.
+function hasDayReservationConflict(candidate, existing, excludeId=null){
+  if(candidate.status==='cancelled') return false;
+  return existing.some(r=>r.id!==excludeId&&r.status!=='cancelled'&&r.room===candidate.room&&
+    !r.cinT&&!r.coutT&&candidate.cin<r.cout&&r.cin<candidate.cout);
+}
 function saveRes(){
   const name=document.getElementById('f-name').value.trim(),cin=document.getElementById('f-cin').value,cout=document.getElementById('f-cout').value;
   if(!name){alert('이름을 입력해주세요');return;}if(!cin||!cout){alert('날짜를 입력해주세요');return;}
@@ -1537,6 +1551,7 @@ function saveRes(){
   const adults=parseInt(document.getElementById('f-adults').value)||1;
   const children=parseInt(document.getElementById('f-children').value)||0;
   const data={name,nameEn:document.getElementById('f-name-en').value.trim(),room:document.getElementById('f-room').value,status:document.getElementById('f-status').value,cin,cout,cinT:isH?document.getElementById('f-cin-t').value:'',coutT:isH?document.getElementById('f-cout-t').value:'',adults,children,guests:adults+children,country:document.getElementById('f-country').value,channel:getCh(),amount:parseInt(document.getElementById('f-amount').value)||0,memo:document.getElementById('f-memo').value.trim(),color:pColor,sticker:pSticker};
+  if(!isH&&data.status!=='cancelled'&&hasDayReservationConflict(data,reservations,editingId||null)){alert('같은 객실에 겹치는 예약이 있습니다. 날짜를 다시 확인해주세요.');return;}
   if(editingId){const idx=reservations.findIndex(r=>r.id===editingId);reservations[idx]={...reservations[idx],...data};toast('수정되었습니다');const uid=editingId;closeMo('moAdd');save();renderAll();selRes(uid);}
   else{data.id=nextId++;reservations.push(data);toast('예약이 추가되었습니다');const nid=data.id;closeMo('moAdd');save();renderAll();selRes(nid);}
 }

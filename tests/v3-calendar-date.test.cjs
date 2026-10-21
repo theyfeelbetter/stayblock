@@ -1,0 +1,6 @@
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');const app=fs.readFileSync(path.join(__dirname,'..','app.html'),'utf8');
+const match=app.match(/const fmtD=d=>([^;]+);/);if(!match)throw new Error('fmtD not found');
+function sample(tz,date){const context=vm.createContext({Date, String});const getDate=vm.runInContext('(function(){'+ 'const fmtD=d=>'+match[1]+';return fmtD;})()',context);return getDate(new Date(date));}
+test('local date formatter does not call UTC ISO conversion',()=>{assert.doesNotMatch(match[1],/toISOString/);assert.match(match[1],/getFullYear/)});
+test('local calendar date handles UTC midnight boundary in western timezones',()=>{const value=require('node:child_process').execFileSync(process.execPath,['-e',`const d=new Date('2026-10-15T00:30:00Z'); process.stdout.write([d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'));`],{env:{...process.env,TZ:'America/Los_Angeles'}}).toString();assert.equal(value,'2026-10-14')});
+test('seed fixtures do not create date strings from UTC ISO representation',()=>{assert.doesNotMatch(app,/const fd=d=>new Date\(y,m,d\)\.toISOString\(\)/)});

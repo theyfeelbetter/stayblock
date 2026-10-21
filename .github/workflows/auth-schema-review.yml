@@ -1,0 +1,42 @@
+name: Better Auth schema review (offline)
+on:
+  pull_request:
+    paths:
+      - 'auth.config.mjs'
+      - 'package.json'
+      - '.github/workflows/auth-schema-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      AUTH_DATABASE_URL: postgresql://stayblock_auth_login:fixture@ep-fake.aws.neon.tech/fake?sslmode=require
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: only-for-offline-schema-generation-fixture-000000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install schema tooling in isolated directory
+        run: |
+          mkdir -p /tmp/stayblock-auth-tool
+          cd /tmp/stayblock-auth-tool
+          npm init -y
+          npm install --ignore-scripts --no-audit --no-fund better-auth@latest pg@latest auth@latest
+          ln -s /tmp/stayblock-auth-tool/node_modules "$GITHUB_WORKSPACE/node_modules"
+      - name: Generate review-only Prisma schema without database
+        run: /tmp/stayblock-auth-tool/node_modules/.bin/auth generate --adapter prisma --dialect postgresql --config ./auth.config.mjs --output ./auth-review.prisma --yes
+      - name: Verify expected auth entities
+        run: |
+          test -s auth-review.prisma
+          grep -Eq 'model (user|User)' auth-review.prisma
+          grep -Eq 'model (session|Session)' auth-review.prisma
+          grep -Eq 'model (account|Account)' auth-review.prisma
+      - uses: actions/upload-artifact@v4
+        with:
+          name: better-auth-generated-schema-review
+          path: auth-review.prisma
