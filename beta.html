@@ -78,7 +78,7 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 <div class="workspace-heading"><div><h2>예약 현황</h2><p>월간 캘린더와 예약 목록을 한눈에 관리하세요.</p></div><span class="workspace-caption">StayBlock · 호스트 대시보드</span></div>
 <section class="panel"><div class="calendar-toolbar"><h2>월간 예약 달력 <small>직접 예약 + 검사한 OTA 일정 (임시 미리보기)</small></h2><div class="actions"><button type="button" class="secondary" id="calPrev" aria-label="이전 달">←</button><span class="calendar-title" id="calTitle"></span><button type="button" class="secondary" id="calNext" aria-label="다음 달">→</button></div></div><div id="calendarGrid" class="calendar-grid" aria-label="월간 예약 달력"></div><small>체크아웃 날짜는 점유일에 포함하지 않습니다. OTA 일정은 수동 동기화 후 임시 표시됩니다.</small></section>
 
-<section class="panel"><div class="actions"><h2>예약 목록</h2><button type="button" id="refresh" class="secondary">새로고침</button></div><div style="overflow-x:auto"><table><thead><tr><th>체크인</th><th>체크아웃</th><th>객실</th><th>상태</th><th>관리</th></tr></thead><tbody id="bookings"></tbody></table></div></section>
+<section class="panel"><div class="actions"><h2>예약 목록</h2><button type="button" id="refresh" class="secondary">새로고침</button></div><div style="overflow-x:auto"><table><thead><tr><th>체크인</th><th>체크아웃</th><th>객실</th><th>출처</th><th>상태</th><th>관리</th></tr></thead><tbody id="bookings"></tbody></table></div></section>
 
 </div>
 <aside class="workspace-sidebar" aria-label="예약 관리 도구">
@@ -92,7 +92,7 @@ main{max-width:1600px;margin:24px auto;padding:0 24px}
 <div id="mobileShade" class="mobile-shade" hidden></div>
 <section id="mobileQuick" class="mobile-quick" role="dialog" aria-modal="true" aria-labelledby="quickTitle" hidden><div class="quick-grip"></div><div class="quick-heading"><strong id="quickTitle">빠른 관리</strong><button id="quickClose" type="button" aria-label="닫기">×</button></div><p id="quickDescription"></p><button id="quickDetail" type="button">상세 관리 열기 →</button></section>
 </main><script type="module">
-import {parseIcs,compareIcs} from "./ui/ical-preview.mjs";
+
 const el=id=>document.getElementById(id),notice=message=>el('notice').textContent=message;
 let completionTimer=null;
 function clearCompletion(){if(completionTimer!==null){clearTimeout(completionTimer);completionTimer=null}el('operationToast').hidden=true;el('notice').textContent=''}
@@ -158,12 +158,12 @@ async function loadSavedFeeds(){
     try{const result=await request('/api/ota/feeds',{method:'PUT',body:JSON.stringify({hostId,feedId:feed.id})});
      otaPreview.set([hostId,result.roomId,result.provider].join('|'),result.events);
      if(result.events.length){const d=new Date(result.events[0].start+'T00:00:00');if(!Number.isNaN(+d))calendarMonth=new Date(d.getFullYear(),d.getMonth(),1)}
-     renderCalendar();el('icsSummary').textContent='동기화 조회 '+result.count+'건 · 충돌 '+result.conflicts+'건 (DB 예약 반영 없음)';await loadSavedFeeds();
+     renderCalendar();await refresh();el('icsSummary').textContent='동기화 조회 '+result.count+'건 · 충돌 '+result.conflicts+'건 (DB 예약 반영 없음)';await loadSavedFeeds();
     }catch(e){el('icsSummary').textContent='동기화 실패: '+e.message}finally{run.disabled=false}
    };line.append(run);
    const remove=document.createElement('button');remove.className='secondary';remove.textContent='연결 삭제';remove.onclick=async()=>{
     if(!confirm('이 OTA URL 저장 연결을 삭제할까요? OTA 원본 예약에는 영향이 없습니다.'))return;
-    try{await request('/api/ota/feeds',{method:'DELETE',body:JSON.stringify({hostId,feedId:feed.id})});otaPreview.delete([hostId,feed.room_id,feed.provider].join('|'));renderCalendar();await loadSavedFeeds()}catch(e){el('icsSummary').textContent='삭제 실패: '+e.message}
+    try{await request('/api/ota/feeds',{method:'DELETE',body:JSON.stringify({hostId,feedId:feed.id})});otaPreview.delete([hostId,feed.room_id,feed.provider].join('|'));renderCalendar();await refresh();await loadSavedFeeds()}catch(e){el('icsSummary').textContent='삭제 실패: '+e.message}
    };line.append(remove);area.append(line);
   }
  }catch(e){area.textContent='저장 연결 조회 불가: '+e.message}
@@ -211,7 +211,7 @@ function hostChanged(){
  el('room').replaceChildren(...context.rooms.filter(r=>r.host_id===hostId).map(r=>option(r.id,r.name)));
  el('icsRoom').replaceChildren(...context.rooms.filter(r=>r.host_id===hostId).map(r=>option(r.id,r.name)));
  el('icsSummary').textContent='';el('icsResults').replaceChildren();el('savedFeeds').replaceChildren();otaPreview.clear();void loadSavedFeeds();
- void refresh();
+ void refreshAll();
 }
 async function load(){
  try{
@@ -229,7 +229,7 @@ async function refresh(){
   for(const r of rows){
     const tr=document.createElement('tr');
     const room=context.rooms.find(x=>x.id===r.room_id);
-    for(const value of [String(r.check_in).slice(0,10),String(r.check_out).slice(0,10),room?.name||'객실',r.status]){
+    for(const value of [String(r.check_in).slice(0,10),String(r.check_out).slice(0,10),room?.name||'객실','직접 등록',r.status]){
       const td=document.createElement('td');td.textContent=value;tr.append(td);
     }
     const td=document.createElement('td');
@@ -245,10 +245,37 @@ async function refresh(){
       try{await request('/api/hosts/'+encodeURIComponent(hostId)+'/reservations/'+encodeURIComponent(r.id),{method:'DELETE'});await refresh();completed('예약 삭제가 완료되었습니다.')}catch(e){notice(e.message)}
     });td.append(button);tr.append(td);tbody.append(tr);
   }
+  // OTA entries are availability observations; they are never editable DB reservations.
+  for(const [key,events] of otaPreview){
+   const [seenHost,roomId,source]=key.split('|');if(seenHost!==hostId)continue;
+   const room=context.rooms.find(x=>x.id===roomId);
+   for(const event of events){
+    const tr=document.createElement('tr');tr.className='ota-list-row';
+    for(const value of [event.start,event.end,room?.name||'객실',source==='airbnb'?'Airbnb':'Booking.com',event.conflict?'중복 주의':'OTA 점유','읽기 전용']){
+     const td=document.createElement('td');td.textContent=value;tr.append(td);
+    }tbody.append(tr);
+   }
+  }
  }catch(e){notice('예약 목록 조회 실패: '+e.message)}
 }
 el('host').addEventListener('change',()=>{clearCompletion();hostChanged()});
-el('refresh').addEventListener('click',()=>{clearCompletion();void refresh()});
+async function refreshAll(){
+ clearCompletion();const hostId=el('host').value;if(!hostId)return;
+ const button=el('refresh');button.disabled=true;button.textContent='갱신 중…';
+ try{
+  const saved=await request('/api/ota/feeds?hostId='+encodeURIComponent(hostId));
+  const results=await Promise.allSettled(saved.feeds.map(feed=>request('/api/ota/feeds',{method:'PUT',body:JSON.stringify({hostId,feedId:feed.id})})));
+  if(el('host').value!==hostId)return;
+  let failed=0;for(let i=0;i<results.length;i++){
+   const x=results[i],feed=saved.feeds[i];const key=[hostId,feed.room_id,feed.provider].join('|');
+   if(x.status==='fulfilled')otaPreview.set(key,x.value.events);else failed++;
+  }
+  await refresh();await loadSavedFeeds();
+  notice(failed?'직접 예약 갱신 완료 · OTA '+failed+'개 연결 실패':'예약·OTA 일정 새로고침 완료');
+ }catch(e){await refresh();notice('OTA 갱신 오류: '+e.message)}
+ finally{button.disabled=false;button.textContent='새로고침'}
+}
+el('refresh').addEventListener('click',()=>{void refreshAll()});
 el('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();notice('로그인 확인 중...');
  try{await request('/api/auth/sign-in/email',{method:'POST',body:JSON.stringify({email:el('email').value,password:el('password').value})});el('password').value='';await load();}
